@@ -1,0 +1,20 @@
+# Configuración con credenciales sensibles
+config.js
+
+# Variables de entorno
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo

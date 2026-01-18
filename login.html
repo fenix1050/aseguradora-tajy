@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Aseguradora Tajy</title>
+    
+    <!-- Cargar Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0056b3 0%, #0066cc 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: #0056b3;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 30px;
+        }
+
+        h1 {
+            color: #0056b3;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #0056b3;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #666;
+            padding: 5px;
+        }
+
+        .password-toggle:hover {
+            color: #0056b3;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover:not(:disabled) {
+            background: #003d82;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .register-link a {
+            color: #0056b3;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo-container">
+            <div class="logo-icon">🛡️</div>
+            <h1>Iniciar Sesión</h1>
+            <p class="subtitle">Ingresa tus credenciales para acceder</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <form id="loginForm" onsubmit="iniciarSesion(event)">
+            <div class="form-group">
+                <label for="usuario">Usuario</label>
+                <input 
+                    type="text" 
+                    id="usuario" 
+                    name="usuario" 
+                    placeholder="Ingresa tu usuario" 
+                    required
+                    autocomplete="username"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <div class="password-wrapper">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Ingresa tu contraseña" 
+                        required
+                        autocomplete="current-password"
+                    >
+                    <button 
+                        type="button" 
+                        class="password-toggle" 
+                        onclick="togglePassword()"
+                        aria-label="Mostrar/ocultar contraseña"
+                    >👁️</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login" id="btnLogin">
+                Iniciar Sesión
+            </button>
+
+            <div class="loading" id="loading">
+                ⏳ Verificando credenciales...
+            </div>
+        </form>
+
+        <div class="register-link">
+            ¿No tienes cuenta? <a href="#" onclick="mostrarMensajeRegistro(event)">Contacta al administrador</a>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        let clienteSupabase;
+
+        // Inicializar Supabase
+        async function inicializarSupabase() {
+            if (!window.config || !window.config.url || !window.config.key) {
+                mostrarAlerta('error', 'Error de configuración. Contacte al administrador.');
+                return false;
+            }
+
+            const { createClient } = window.supabase;
+            clienteSupabase = createClient(window.config.url, window.config.key);
+            return true;
+        }
+
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleBtn = document.querySelector('.password-toggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleBtn.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggleBtn.textContent = '👁️';
+            }
+        }
+
+        // Mostrar alerta
+        function mostrarAlerta(tipo, mensaje) {
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
+            
+            const alert = container.querySelector('.alert');
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        // Iniciar sesión
+        async function iniciarSesion(event) {
+            event.preventDefault();
+            
+            if (!clienteSupabase) {
+                const inicializado = await inicializarSupabase();
+                if (!inicializado) return;
+            }
+
+            const usuario = document.getElementById('usuario').value.trim();
+            const password = document.getElementById('password').value;
+            const btnLogin = document.getElementById('btnLogin');
+            const loading = document.getElementById('loading');
+
+            btnLogin.disabled = true;
+            loading.style.display = 'block';
+
+            try {
+                // Intentar login con Supabase Auth
+                // Usamos email/password auth de Supabase
+                // El usuario puede ser email o username (si configuramos custom auth)
+                
+                // OPCIÓN 1: Autenticación con email
+                const email = usuario.includes('@') ? usuario : `${usuario}@tajy.com`;
+                
+                const { data, error } = await clienteSupabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                // Obtener información del usuario
+                const { data: userData } = await clienteSupabase.auth.getUser();
+                
+                if (!userData || !userData.user) {
+                    throw new Error('No se pudo obtener información del usuario');
+                }
+
+                // Guardar sesión y usuario en localStorage
+                localStorage.setItem('userSession', JSON.stringify({
+                    email: userData.user.email,
+                    id: userData.user.id
+                }));
+
+                // Obtener nombre completo del perfil de usuario (si existe tabla usuarios)
+                try {
+                    const { data: perfil, error: perfilError } = await clienteSupabase
+                        .from('usuarios')
+                        .select('nombre_completo, rol')
+                        .eq('email', userData.user.email)
+                        .single();
+
+                    if (!perfilError && perfil) {
+                        localStorage.setItem('userProfile', JSON.stringify(perfil));
+                    }
+                } catch (e) {
+                    // Si no existe tabla usuarios, usar email como nombre
+                    console.log('No se encontró perfil de usuario, usando email');
+                }
+
+                // Redirigir al dashboard
+                window.location.href = 'index.html';
+
+            } catch (error) {
+                console.error('Error al iniciar sesión:', error);
+                
+                let mensajeError = 'Error al iniciar sesión. Verifica tus credenciales.';
+                
+                if (error.message.includes('Invalid login credentials')) {
+                    mensajeError = 'Usuario o contraseña incorrectos';
+                } else if (error.message.includes('Email not confirmed')) {
+                    mensajeError = 'Por favor confirma tu email antes de iniciar sesión';
+                }
+                
+                mostrarAlerta('error', mensajeError);
+            } finally {
+                btnLogin.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        // Mensaje de registro
+        function mostrarMensajeRegistro(event) {
+            event.preventDefault();
+            mostrarAlerta('info', 'Para crear una cuenta, contacta al administrador del sistema.');
+        }
+
+        // Inicializar al cargar
+        window.onload = async function() {
+            // Verificar si ya hay una sesión activa
+            const session = localStorage.getItem('userSession');
+            if (session) {
+                // Verificar si la sesión sigue válida
+                await inicializarSupabase();
+                if (clienteSupabase) {
+                    const { data: { session: activeSession } } = await clienteSupabase.auth.getSession();
+                    if (activeSession) {
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                }
+            }
+            
+            await inicializarSupabase();
+        };
+    </script>
+</body>
+</html>
