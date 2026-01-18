@@ -595,7 +595,7 @@
             </div>
             <div class="user-info">
                 <p><strong id="userName">Usuario</strong></p>
-                <p style="font-size: 0.9em;">Tramitador de Siniestros</p>
+                <p style="font-size: 0.9em;" id="userRole">Tramitador de Siniestros</p>
                 <div id="connectionStatus" class="connection-status status-disconnected">
                     🔴 No conectado
                 </div>
@@ -627,6 +627,7 @@
             <button class="tab-button" data-tab="nuevo" onclick="cambiarTabDirecto('nuevo')">➕ Nuevo Siniestro</button>
             <button class="tab-button" data-tab="mensajes" onclick="cambiarTabDirecto('mensajes')">💬 Mensajes Automáticos</button>
             <button class="tab-button" data-tab="reportes" onclick="cambiarTabDirecto('reportes')">📊 Reportes</button>
+            <button class="tab-button" data-tab="admin" onclick="cambiarTabDirecto('admin')" id="tabAdmin" style="display: none;">👤 Administración</button>
         </div>
 
         <!-- Tab: Lista de Siniestros -->
@@ -795,6 +796,67 @@
 
                 <button class="btn btn-primary" onclick="generarReporte()">📊 Generar Reporte</button>
                 <button class="btn btn-success" onclick="exportarExcel()">📥 Exportar a Excel</button>
+            </div>
+        </div>
+
+        <!-- Tab: Administración (solo para admins) -->
+        <div id="admin" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">👤 Gestión de Usuarios</h2>
+                <p style="color: #666; margin-bottom: 20px;">Administra los usuarios del sistema</p>
+
+                <!-- Formulario para crear nuevo usuario -->
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">➕ Crear Nuevo Usuario</h3>
+                    <form id="formNuevoUsuario" onsubmit="crearUsuario(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nombre Completo *</label>
+                                <input type="text" name="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" name="email" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Contraseña *</label>
+                                <input type="password" name="password" required minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label>Rol *</label>
+                                <select name="rol" required>
+                                    <option value="tramitador">Tramitador</option>
+                                    <option value="admin">Administrador</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="btnCrearUsuario">👤 Crear Usuario</button>
+                    </form>
+                </div>
+
+                <!-- Lista de usuarios -->
+                <h3 style="color: var(--primary); margin-bottom: 15px;">📋 Usuarios Registrados</h3>
+                <div class="loading" id="loadingUsuarios">
+                    <p>⏳ Cargando usuarios...</p>
+                </div>
+                <div class="table-container">
+                    <table id="tablaUsuarios">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th>Fecha Creación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaUsuarios">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

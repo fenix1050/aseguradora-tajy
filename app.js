@@ -141,8 +141,21 @@ async function verificarSesion() {
 
 function actualizarHeaderUsuario() {
     const nombreElement = document.getElementById('userName');
+    const roleElement = document.getElementById('userRole');
+
     if (nombreElement && usuarioActual) {
         nombreElement.textContent = usuarioActual.nombre;
+    }
+
+    if (roleElement && usuarioActual) {
+        const rolTexto = usuarioActual.rol === 'admin' ? 'Administrador' : 'Tramitador de Siniestros';
+        roleElement.textContent = rolTexto;
+    }
+
+    // Mostrar pestaña de administración solo para admins
+    const tabAdmin = document.getElementById('tabAdmin');
+    if (tabAdmin && usuarioActual && usuarioActual.rol === 'admin') {
+        tabAdmin.style.display = 'block';
     }
 }
 
@@ -581,6 +594,11 @@ function cambiarTabDirecto(tabId) {
 
     const tabButton = document.querySelector(`[data-tab="${tabId}"]`);
     if (tabButton) tabButton.classList.add('active');
+
+    // Cargar usuarios si se accede a la pestaña de administración
+    if (tabId === 'admin' && usuarioActual && usuarioActual.rol === 'admin') {
+        cargarUsuarios();
+    }
 }
 
 function actualizarTabla() {
@@ -943,6 +961,199 @@ function exportarExcel() {
     URL.revokeObjectURL(url);
 
     mostrarAlerta('success', '✅ Reporte exportado exitosamente');
+}
+
+// ============================================
+// GESTIÓN DE USUARIOS (SOLO ADMIN)
+// ============================================
+
+async function cargarUsuarios() {
+    if (!clienteSupabase) {
+        console.error('Supabase no está inicializado');
+        return;
+    }
+
+    // Verificar que el usuario sea admin
+    if (!usuarioActual || usuarioActual.rol !== 'admin') {
+        mostrarAlerta('error', '❌ No tienes permisos para ver los usuarios');
+        return;
+    }
+
+    mostrarCargando('loadingUsuarios', true);
+
+    try {
+        const { data, error } = await clienteSupabase
+            .from('usuarios')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        actualizarTablaUsuarios(data || []);
+        console.log(`✅ ${data?.length || 0} usuarios cargados`);
+    } catch (error) {
+        console.error('Error al cargar usuarios:', error);
+        mostrarAlerta('error', 'Error al cargar los usuarios: ' + error.message);
+    } finally {
+        mostrarCargando('loadingUsuarios', false);
+    }
+}
+
+function actualizarTablaUsuarios(usuarios) {
+    const tbody = document.getElementById('listaUsuarios');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (usuarios.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #666;">No hay usuarios registrados</td></tr>';
+        return;
+    }
+
+    usuarios.forEach(usuario => {
+        const tr = document.createElement('tr');
+        const rolBadge = usuario.rol === 'admin' ?
+            '<span class="badge badge-aprobado">Administrador</span>' :
+            '<span class="badge badge-proceso">Tramitador</span>';
+
+        const esUsuarioActual = usuarioActual && usuario.email === usuarioActual.email;
+        const botonEliminar = esUsuarioActual ?
+            '<button class="btn btn-danger btn-small" disabled title="No puedes eliminarte a ti mismo">🗑️</button>' :
+            `<button class="btn btn-danger btn-small" onclick="eliminarUsuario('${usuario.id}')" title="Eliminar usuario">🗑️</button>`;
+
+        tr.innerHTML = `
+            <td><strong>${usuario.nombre_completo}</strong></td>
+            <td>${usuario.email}</td>
+            <td>${rolBadge}</td>
+            <td>${new Date(usuario.created_at).toLocaleDateString('es-PY')}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn btn-info btn-small" onclick="cambiarRolUsuario('${usuario.id}', '${usuario.rol}')" title="Cambiar rol">🔄</button>
+                    ${botonEliminar}
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function crearUsuario(event) {
+    event.preventDefault();
+
+    if (!clienteSupabase) {
+        mostrarAlerta('error', 'No hay conexión con la base de datos');
+        return;
+    }
+
+    // Verificar que el usuario sea admin
+    if (!usuarioActual || usuarioActual.rol !== 'admin') {
+        mostrarAlerta('error', '❌ No tienes permisos para crear usuarios');
+        return;
+    }
+
+    const form = event.target;
+    const formData = new FormData(form);
+    const btnCrear = document.getElementById('btnCrearUsuario');
+
+    btnCrear.disabled = true;
+    btnCrear.textContent = '⏳ Creando...';
+
+    try {
+        const email = formData.get('email');
+        const password = formData.get('password');
+        const nombre = formData.get('nombre');
+        const rol = formData.get('rol');
+
+        // Crear usuario en Supabase Auth
+        const { data: authData, error: authError } = await clienteSupabase.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    nombre_completo: nombre
+                }
+            }
+        });
+
+        if (authError) throw authError;
+
+        // Insertar en la tabla usuarios
+        const { error: dbError } = await clienteSupabase
+            .from('usuarios')
+            .insert([{
+                email: email,
+                nombre_completo: nombre,
+                rol: rol
+            }]);
+
+        if (dbError) throw dbError;
+
+        mostrarAlerta('success', '✅ Usuario creado exitosamente');
+        form.reset();
+        await cargarUsuarios();
+    } catch (error) {
+        console.error('Error al crear usuario:', error);
+        if (error.message.includes('already registered')) {
+            mostrarAlerta('error', '❌ Este email ya está registrado');
+        } else {
+            mostrarAlerta('error', '❌ Error al crear usuario: ' + error.message);
+        }
+    } finally {
+        btnCrear.disabled = false;
+        btnCrear.textContent = '👤 Crear Usuario';
+    }
+}
+
+async function cambiarRolUsuario(userId, rolActual) {
+    if (!clienteSupabase || !usuarioActual || usuarioActual.rol !== 'admin') {
+        mostrarAlerta('error', '❌ No tienes permisos para cambiar roles');
+        return;
+    }
+
+    const nuevoRol = rolActual === 'admin' ? 'tramitador' : 'admin';
+    const confirmacion = confirm(`¿Cambiar el rol de este usuario a ${nuevoRol === 'admin' ? 'Administrador' : 'Tramitador'}?`);
+
+    if (!confirmacion) return;
+
+    try {
+        const { error } = await clienteSupabase
+            .from('usuarios')
+            .update({ rol: nuevoRol })
+            .eq('id', userId);
+
+        if (error) throw error;
+
+        mostrarAlerta('success', `✅ Rol actualizado a ${nuevoRol === 'admin' ? 'Administrador' : 'Tramitador'}`);
+        await cargarUsuarios();
+    } catch (error) {
+        console.error('Error al cambiar rol:', error);
+        mostrarAlerta('error', '❌ Error al cambiar el rol: ' + error.message);
+    }
+}
+
+async function eliminarUsuario(userId) {
+    if (!clienteSupabase || !usuarioActual || usuarioActual.rol !== 'admin') {
+        mostrarAlerta('error', '❌ No tienes permisos para eliminar usuarios');
+        return;
+    }
+
+    const confirmacion = confirm('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.');
+    if (!confirmacion) return;
+
+    try {
+        const { error } = await clienteSupabase
+            .from('usuarios')
+            .delete()
+            .eq('id', userId);
+
+        if (error) throw error;
+
+        mostrarAlerta('success', '✅ Usuario eliminado exitosamente');
+        await cargarUsuarios();
+    } catch (error) {
+        console.error('Error al eliminar usuario:', error);
+        mostrarAlerta('error', '❌ Error al eliminar usuario: ' + error.message);
+    }
 }
 
 // ============================================
