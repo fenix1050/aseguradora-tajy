@@ -332,8 +332,6 @@ Este proyecto está bajo la Licencia MIT. Ver `LICENSE` para más detalles.
 ## 👨‍💻 Autor
 
 **Kevin Ruiz Díaz**  
-Tramitador de Siniestros  
-Aseguradora Tajy - Area Digital
 
 ---
 
