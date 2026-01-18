@@ -969,7 +969,7 @@ function obtenerTextoEstado(estado) {
         'pendiente': 'Pendiente',
         'proceso': 'En Proceso',
         'aprobado': 'Aprobado',
-        'taller': 'En Taller',
+        'taller': 'Liquidado',
         'rechazado': 'Rechazado'
     };
     return textos[estado] || estado;
