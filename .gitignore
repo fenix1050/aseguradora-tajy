@@ -1,5 +1,5 @@
 # Configuración con credenciales sensibles
-config.js
+# config.js - Comentado para permitir deploy en Netlify (usa clave pública anon)
 
 # Variables de entorno
 .env
