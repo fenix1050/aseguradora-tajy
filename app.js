@@ -105,13 +105,18 @@ async function verificarSesion() {
                 .eq('email', user.email)
                 .single();
 
+            console.log('📊 Perfil obtenido de la base de datos:', perfil);
+            console.log('❌ Error al obtener perfil:', perfilError);
+
             if (!perfilError && perfil) {
                 usuarioActual = {
                     email: user.email,
                     nombre: perfil.nombre_completo,
                     rol: perfil.rol
                 };
+                console.log('✅ Usuario actual configurado:', usuarioActual);
             } else {
+                console.warn('⚠️ No se encontró perfil, usando valores por defecto');
                 // Si no hay perfil, usar email como nombre
                 usuarioActual = {
                     email: user.email,
@@ -120,6 +125,7 @@ async function verificarSesion() {
                 };
             }
         } catch (e) {
+            console.error('❌ Error en catch al obtener perfil:', e);
             // Si no existe la tabla usuarios, usar email
             usuarioActual = {
                 email: user.email,
