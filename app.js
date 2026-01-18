@@ -84,19 +84,16 @@ async function verificarSesion() {
     try {
         const { data: { session }, error } = await clienteSupabase.auth.getSession();
         if (error || !session) {
-            console.log('ℹ️ No hay sesión activa, pero continuando para permitir desarrollo');
-            // Comentar temporalmente para desarrollo - descomentar en producción
-            // window.location.href = 'login.html';
-            // return false;
-            return false; // Continuar sin sesión para desarrollo
+            console.log('❌ No hay sesión activa, redirigiendo al login');
+            window.location.href = 'login.html';
+            return false;
         }
 
         // Obtener información del usuario
         const { data: { user } } = await clienteSupabase.auth.getUser();
         if (!user) {
-            console.log('ℹ️ No se pudo obtener usuario, pero continuando');
-            // window.location.href = 'login.html';
-            // return false;
+            console.log('❌ No se pudo obtener usuario, redirigiendo al login');
+            window.location.href = 'login.html';
             return false;
         }
 
