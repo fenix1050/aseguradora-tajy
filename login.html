@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - Aseguradora Tajy</title>
-    
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+
     <!-- Cargar Supabase Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+
     <style>
         * {
             margin: 0;
@@ -17,76 +21,146 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0056b3 0%, #0066cc 100%);
             min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            background: #f5f5f5;
         }
 
-        .login-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            padding: 40px;
+        .login-wrapper {
+            display: flex;
             width: 100%;
-            max-width: 400px;
+            min-height: 100vh;
         }
 
-        .logo-container {
-            text-align: center;
-            margin-bottom: 30px;
+        /* Panel izquierdo con imagen */
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 60px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%230099ff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,165.3C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            opacity: 0.5;
+        }
+
+        .logo-section {
+            z-index: 1;
+        }
+
+        .logo-section h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .logo-icon {
-            width: 60px;
-            height: 60px;
-            background: #0056b3;
-            border-radius: 12px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 15px;
-            font-size: 30px;
+            font-size: 24px;
         }
 
-        h1 {
-            color: #0056b3;
-            font-size: 1.8em;
+        .logo-section p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1em;
+        }
+
+        .image-container {
+            z-index: 1;
+            margin: 40px 0;
+        }
+
+        .image-container img {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .quote {
+            z-index: 1;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1em;
+            border-left: 4px solid rgba(255, 255, 255, 0.3);
+            padding-left: 20px;
+        }
+
+        /* Panel derecho con formulario */
+        .right-panel {
+            flex: 1;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .login-header {
+            margin-bottom: 40px;
+        }
+
+        .login-header h2 {
+            color: #1a2332;
+            font-size: 2em;
             margin-bottom: 10px;
         }
 
-        .subtitle {
+        .login-header p {
             color: #666;
-            font-size: 0.9em;
-            margin-bottom: 30px;
+            font-size: 0.95em;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         label {
             display: block;
             color: #333;
-            font-weight: 600;
+            font-weight: 500;
             margin-bottom: 8px;
             font-size: 0.9em;
         }
 
         input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #dee2e6;
-            border-radius: 8px;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             font-size: 1em;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
+            background: #fafafa;
         }
 
         input:focus {
             outline: none;
             border-color: #0056b3;
+            background: white;
         }
 
         .password-wrapper {
@@ -95,7 +169,7 @@
 
         .password-toggle {
             position: absolute;
-            right: 12px;
+            right: 16px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
@@ -112,12 +186,12 @@
 
         .btn-login {
             width: 100%;
-            padding: 12px;
-            background: #0056b3;
+            padding: 14px;
+            background: #1a2332;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 1.1em;
+            border-radius: 10px;
+            font-size: 1.05em;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
@@ -125,9 +199,9 @@
         }
 
         .btn-login:hover:not(:disabled) {
-            background: #003d82;
+            background: #2d3e50;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 20px rgba(26, 35, 50, 0.3);
         }
 
         .btn-login:disabled {
@@ -137,7 +211,7 @@
 
         .register-link {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 25px;
             color: #666;
             font-size: 0.9em;
         }
@@ -153,23 +227,23 @@
         }
 
         .alert {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 25px;
             font-size: 0.9em;
             display: none;
         }
 
         .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
         }
 
         .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: #efe;
+            color: #3c3;
+            border-left: 4px solid #3c3;
         }
 
         .loading {
@@ -177,64 +251,135 @@
             text-align: center;
             color: #666;
             margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .made-with {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .made-with img {
+            width: 20px;
+            height: 20px;
+        }
+
+        @media (max-width: 968px) {
+            .login-wrapper {
+                flex-direction: column;
+            }
+
+            .left-panel {
+                min-height: 40vh;
+                padding: 40px 30px;
+            }
+
+            .image-container {
+                display: none;
+            }
+
+            .right-panel {
+                padding: 40px 30px;
+            }
+
+            .quote {
+                font-size: 0.95em;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="logo-container">
-            <div class="logo-icon">🛡️</div>
-            <h1>Iniciar Sesión</h1>
-            <p class="subtitle">Ingresa tus credenciales para acceder</p>
-        </div>
-
-        <div id="alertContainer"></div>
-
-        <form id="loginForm" onsubmit="iniciarSesion(event)">
-            <div class="form-group">
-                <label for="usuario">Usuario</label>
-                <input 
-                    type="text" 
-                    id="usuario" 
-                    name="usuario" 
-                    placeholder="Ingresa tu usuario" 
-                    required
-                    autocomplete="username"
-                >
+    <div class="login-wrapper">
+        <!-- Panel Izquierdo -->
+        <div class="left-panel">
+            <div class="logo-section">
+                <h1>
+                    <div class="logo-icon">🛡️</div>
+                    Aseguradora Tajy
+                </h1>
+                <p>Sistema de Gestión de Siniestros</p>
             </div>
 
-            <div class="form-group">
-                <label for="password">Contraseña</label>
-                <div class="password-wrapper">
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        placeholder="Ingresa tu contraseña" 
-                        required
-                        autocomplete="current-password"
-                    >
-                    <button 
-                        type="button" 
-                        class="password-toggle" 
-                        onclick="togglePassword()"
-                        aria-label="Mostrar/ocultar contraseña"
-                    >👁️</button>
+            <div class="image-container">
+                <img src="logo/logo.png" alt="Aseguradora Tajy" onerror="this.style.display='none'">
+            </div>
+
+            <div class="quote">
+                "Gestiona todos tus siniestros de manera eficiente y profesional"
+            </div>
+        </div>
+
+        <!-- Panel Derecho -->
+        <div class="right-panel">
+            <div class="login-container">
+                <div class="login-header">
+                    <h2>Iniciar Sesión</h2>
+                    <p>Ingresa tus credenciales para acceder</p>
+                </div>
+
+                <div id="alertContainer"></div>
+
+                <form id="loginForm" onsubmit="iniciarSesion(event)">
+                    <div class="form-group">
+                        <label for="usuario">Usuario</label>
+                        <input
+                            type="text"
+                            id="usuario"
+                            name="usuario"
+                            placeholder="Ingresa tu usuario"
+                            required
+                            autocomplete="username"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <div class="password-wrapper">
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Ingresa tu contraseña"
+                                required
+                                autocomplete="current-password"
+                            >
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                onclick="togglePassword()"
+                                aria-label="Mostrar/ocultar contraseña"
+                            >👁️</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-login" id="btnLogin">
+                        Iniciar Sesión
+                    </button>
+
+                    <div class="loading" id="loading">
+                        ⏳ Verificando credenciales...
+                    </div>
+                </form>
+
+                <div class="register-link">
+                    ¿No tienes cuenta? <a href="#" onclick="mostrarMensajeRegistro(event)">Regístrate</a>
                 </div>
             </div>
-
-            <button type="submit" class="btn-login" id="btnLogin">
-                Iniciar Sesión
-            </button>
-
-            <div class="loading" id="loading">
-                ⏳ Verificando credenciales...
-            </div>
-        </form>
-
-        <div class="register-link">
-            ¿No tienes cuenta? <a href="#" onclick="mostrarMensajeRegistro(event)">Contacta al administrador</a>
         </div>
+    </div>
+
+    <div class="made-with">
+        Made with Emergent
     </div>
 
     <script src="config.js"></script>
@@ -257,7 +402,7 @@
         function togglePassword() {
             const passwordInput = document.getElementById('password');
             const toggleBtn = document.querySelector('.password-toggle');
-            
+
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
                 toggleBtn.textContent = '🙈';
@@ -271,10 +416,10 @@
         function mostrarAlerta(tipo, mensaje) {
             const container = document.getElementById('alertContainer');
             container.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
-            
+
             const alert = container.querySelector('.alert');
             alert.style.display = 'block';
-            
+
             setTimeout(() => {
                 alert.style.display = 'none';
             }, 5000);
@@ -283,7 +428,7 @@
         // Iniciar sesión
         async function iniciarSesion(event) {
             event.preventDefault();
-            
+
             if (!clienteSupabase) {
                 const inicializado = await inicializarSupabase();
                 if (!inicializado) return;
@@ -298,13 +443,8 @@
             loading.style.display = 'block';
 
             try {
-                // Intentar login con Supabase Auth
-                // Usamos email/password auth de Supabase
-                // El usuario puede ser email o username (si configuramos custom auth)
-                
-                // OPCIÓN 1: Autenticación con email
-                const email = usuario.includes('@') ? usuario : `${usuario}@tajy.com`;
-                
+                const email = usuario.includes('@') ? usuario : `${usuario}@tajy.com.py`;
+
                 const { data, error } = await clienteSupabase.auth.signInWithPassword({
                     email: email,
                     password: password
@@ -312,20 +452,17 @@
 
                 if (error) throw error;
 
-                // Obtener información del usuario
                 const { data: userData } = await clienteSupabase.auth.getUser();
-                
+
                 if (!userData || !userData.user) {
                     throw new Error('No se pudo obtener información del usuario');
                 }
 
-                // Guardar sesión y usuario en localStorage
                 localStorage.setItem('userSession', JSON.stringify({
                     email: userData.user.email,
                     id: userData.user.id
                 }));
 
-                // Obtener nombre completo del perfil de usuario (si existe tabla usuarios)
                 try {
                     const { data: perfil, error: perfilError } = await clienteSupabase
                         .from('usuarios')
@@ -337,24 +474,22 @@
                         localStorage.setItem('userProfile', JSON.stringify(perfil));
                     }
                 } catch (e) {
-                    // Si no existe tabla usuarios, usar email como nombre
                     console.log('No se encontró perfil de usuario, usando email');
                 }
 
-                // Redirigir al dashboard
                 window.location.href = 'index.html';
 
             } catch (error) {
                 console.error('Error al iniciar sesión:', error);
-                
+
                 let mensajeError = 'Error al iniciar sesión. Verifica tus credenciales.';
-                
+
                 if (error.message.includes('Invalid login credentials')) {
                     mensajeError = 'Usuario o contraseña incorrectos';
                 } else if (error.message.includes('Email not confirmed')) {
                     mensajeError = 'Por favor confirma tu email antes de iniciar sesión';
                 }
-                
+
                 mostrarAlerta('error', mensajeError);
             } finally {
                 btnLogin.disabled = false;
@@ -365,15 +500,13 @@
         // Mensaje de registro
         function mostrarMensajeRegistro(event) {
             event.preventDefault();
-            mostrarAlerta('info', 'Para crear una cuenta, contacta al administrador del sistema.');
+            mostrarAlerta('error', 'Para crear una cuenta, contacta al administrador del sistema.');
         }
 
         // Inicializar al cargar
         window.onload = async function() {
-            // Verificar si ya hay una sesión activa
             const session = localStorage.getItem('userSession');
             if (session) {
-                // Verificar si la sesión sigue válida
                 await inicializarSupabase();
                 if (clienteSupabase) {
                     const { data: { session: activeSession } } = await clienteSupabase.auth.getSession();
@@ -383,7 +516,7 @@
                     }
                 }
             }
-            
+
             await inicializarSupabase();
         };
     </script>
