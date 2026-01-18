@@ -72,6 +72,260 @@ function debounce(func, wait) {
 }
 
 // ============================================
+// BÚSQUEDA INTELIGENTE (FUZZY SEARCH)
+// ============================================
+
+// Calcular distancia de Levenshtein (tolerancia a errores tipográficos)
+function levenshteinDistance(str1, str2) {
+    const m = str1.length;
+    const n = str2.length;
+    const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            if (str1[i - 1] === str2[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1];
+            } else {
+                dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+            }
+        }
+    }
+    return dp[m][n];
+}
+
+// Similitud fonética para español (soundex adaptado)
+function soundexEspanol(str) {
+    if (!str) return '';
+    str = str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    // Reemplazos fonéticos para español
+    const reemplazos = [
+        [/[gj]/g, 'j'],      // g y j suenan similar
+        [/[csz]/g, 's'],     // c, s, z en latinoamérica
+        [/[bv]/g, 'b'],      // b y v suenan igual
+        [/ll/g, 'y'],        // ll como y
+        [/ñ/g, 'n'],         // ñ simplificada
+        [/[qk]/g, 'k'],      // q y k
+        [/h/g, ''],          // h muda
+        [/x/g, 'ks'],        // x como ks
+        [/w/g, 'u'],         // w como u
+        [/([aeiou])\1+/g, '$1'], // vocales repetidas
+    ];
+
+    reemplazos.forEach(([patron, reemplazo]) => {
+        str = str.replace(patron, reemplazo);
+    });
+
+    // Tomar primeras consonantes significativas
+    const consonantes = str.replace(/[aeiou]/g, '').slice(0, 4);
+    const primeraVocal = (str.match(/[aeiou]/) || [''])[0];
+
+    return (str[0] || '') + primeraVocal + consonantes;
+}
+
+// Calcular score de similitud (0-1)
+function calcularSimilitud(busqueda, texto) {
+    if (!busqueda || !texto) return 0;
+
+    busqueda = busqueda.toLowerCase().trim();
+    texto = texto.toLowerCase().trim();
+
+    // Coincidencia exacta
+    if (texto === busqueda) return 1;
+
+    // Contiene el texto exacto
+    if (texto.includes(busqueda)) return 0.95;
+
+    // Comienza con el texto
+    if (texto.startsWith(busqueda)) return 0.9;
+
+    // Similitud fonética
+    const soundex1 = soundexEspanol(busqueda);
+    const soundex2 = soundexEspanol(texto);
+    if (soundex1 === soundex2) return 0.85;
+
+    // Distancia de Levenshtein normalizada
+    const distancia = levenshteinDistance(busqueda, texto);
+    const maxLen = Math.max(busqueda.length, texto.length);
+    const similitudLevenshtein = 1 - (distancia / maxLen);
+
+    // Verificar cada palabra del texto
+    const palabrasTexto = texto.split(/\s+/);
+    let mejorSimilitudPalabra = 0;
+
+    for (const palabra of palabrasTexto) {
+        if (palabra.includes(busqueda)) {
+            mejorSimilitudPalabra = Math.max(mejorSimilitudPalabra, 0.9);
+        } else if (palabra.startsWith(busqueda)) {
+            mejorSimilitudPalabra = Math.max(mejorSimilitudPalabra, 0.85);
+        } else {
+            const distPalabra = levenshteinDistance(busqueda, palabra);
+            const simPalabra = 1 - (distPalabra / Math.max(busqueda.length, palabra.length));
+            mejorSimilitudPalabra = Math.max(mejorSimilitudPalabra, simPalabra * 0.8);
+        }
+    }
+
+    return Math.max(similitudLevenshtein * 0.7, mejorSimilitudPalabra);
+}
+
+// Buscar con fuzzy matching
+function busquedaFuzzy(query, items, campo, umbral = 0.4) {
+    if (!query || query.length < 2) return [];
+
+    const resultados = items
+        .map(item => ({
+            item,
+            score: calcularSimilitud(query, item[campo] || '')
+        }))
+        .filter(r => r.score >= umbral)
+        .sort((a, b) => b.score - a.score);
+
+    return resultados;
+}
+
+// Cache de asegurados para sugerencias
+let cacheAsegurados = [];
+let ultimaActualizacionCache = 0;
+
+async function actualizarCacheAsegurados() {
+    const ahora = Date.now();
+    // Actualizar cada 5 minutos
+    if (ahora - ultimaActualizacionCache < 300000 && cacheAsegurados.length > 0) {
+        return cacheAsegurados;
+    }
+
+    try {
+        const { data, error } = await clienteSupabase
+            .from('siniestros')
+            .select('asegurado, numero')
+            .order('asegurado');
+
+        if (!error && data) {
+            cacheAsegurados = data;
+            ultimaActualizacionCache = ahora;
+        }
+    } catch (e) {
+        console.error('Error actualizando cache:', e);
+    }
+
+    return cacheAsegurados;
+}
+
+// Mostrar sugerencias de búsqueda
+let sugerenciasActivas = null;
+
+function mostrarSugerencias(input, sugerencias) {
+    ocultarSugerencias();
+
+    if (!sugerencias || sugerencias.length === 0) return;
+
+    const rect = input.getBoundingClientRect();
+    const container = document.createElement('div');
+    container.className = 'sugerencias-dropdown';
+    container.style.cssText = `
+        position: fixed;
+        top: ${rect.bottom + 5}px;
+        left: ${rect.left}px;
+        width: ${rect.width}px;
+        max-height: 250px;
+        overflow-y: auto;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        z-index: 10000;
+    `;
+
+    sugerencias.slice(0, 8).forEach((sug, index) => {
+        const item = document.createElement('div');
+        item.className = 'sugerencia-item';
+        item.style.cssText = `
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        `;
+
+        const porcentaje = Math.round(sug.score * 100);
+        const colorScore = sug.score > 0.8 ? '#28a745' : sug.score > 0.6 ? '#ffc107' : '#6c757d';
+
+        item.innerHTML = `
+            <span>${resaltarCoincidencia(sug.item.asegurado, input.value)}</span>
+            <span style="font-size: 11px; color: ${colorScore}; background: ${colorScore}20; padding: 2px 6px; border-radius: 10px;">
+                ${porcentaje}%
+            </span>
+        `;
+
+        item.addEventListener('mouseenter', () => {
+            item.style.background = '#f8f9fa';
+        });
+        item.addEventListener('mouseleave', () => {
+            item.style.background = 'white';
+        });
+        item.addEventListener('click', () => {
+            input.value = sug.item.asegurado;
+            ocultarSugerencias();
+            filtrarTabla();
+        });
+
+        container.appendChild(item);
+    });
+
+    document.body.appendChild(container);
+    sugerenciasActivas = container;
+
+    // Cerrar al hacer click fuera
+    setTimeout(() => {
+        document.addEventListener('click', cerrarSugerenciasClick);
+    }, 100);
+}
+
+function resaltarCoincidencia(texto, busqueda) {
+    if (!busqueda) return texto;
+    const regex = new RegExp(`(${busqueda.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return texto.replace(regex, '<strong style="color: #0056b3;">$1</strong>');
+}
+
+function ocultarSugerencias() {
+    if (sugerenciasActivas) {
+        sugerenciasActivas.remove();
+        sugerenciasActivas = null;
+    }
+    document.removeEventListener('click', cerrarSugerenciasClick);
+}
+
+function cerrarSugerenciasClick(e) {
+    if (!e.target.closest('.sugerencias-dropdown') && !e.target.closest('#buscarAsegurado')) {
+        ocultarSugerencias();
+    }
+}
+
+// Búsqueda inteligente con sugerencias
+const busquedaInteligenteDebounced = debounce(async function(input) {
+    const query = input.value.trim();
+
+    if (query.length < 2) {
+        ocultarSugerencias();
+        return;
+    }
+
+    const asegurados = await actualizarCacheAsegurados();
+    const resultados = busquedaFuzzy(query, asegurados, 'asegurado', 0.35);
+
+    if (resultados.length > 0) {
+        mostrarSugerencias(input, resultados);
+    } else {
+        ocultarSugerencias();
+    }
+}, 200);
+
+// ============================================
 // AUTENTICACIÓN
 // ============================================
 
@@ -266,19 +520,83 @@ async function cargarSiniestros(pagina = 0, aplicarFiltros = false) {
         siniestros = data || [];
         totalRegistros = count || 0;
 
+        // Si no hay resultados con búsqueda exacta y hay filtro de asegurado, intentar fuzzy search
+        if (siniestros.length === 0 && filtrosActuales.asegurado && filtrosActuales.asegurado.length >= 2) {
+            const resultadosFuzzy = await buscarConFuzzy(filtrosActuales.asegurado, filtrosActuales.estado);
+            if (resultadosFuzzy.length > 0) {
+                siniestros = resultadosFuzzy;
+                totalRegistros = resultadosFuzzy.length;
+                mostrarAlertaFuzzy(filtrosActuales.asegurado, resultadosFuzzy.length);
+            }
+        }
+
         actualizarTabla();
         actualizarEstadisticas();
         actualizarControlesPaginacion();
-        
+
         // Guardar en caché
         cacheManager.set('siniestros', siniestros);
-        
+
         console.log(`✅ ${siniestros.length} siniestros cargados (página ${pagina + 1}, total: ${totalRegistros})`);
     } catch (error) {
         console.error('Error al cargar siniestros:', error);
         mostrarAlerta('error', 'Error al cargar los siniestros: ' + error.message);
     } finally {
         mostrarCargando('loadingLista', false);
+    }
+}
+
+// Búsqueda fuzzy cuando no hay resultados exactos
+async function buscarConFuzzy(query, filtroEstado) {
+    try {
+        // Obtener todos los asegurados para fuzzy search
+        let queryDB = clienteSupabase.from('siniestros').select('*');
+
+        if (filtroEstado) {
+            queryDB = queryDB.eq('estado', filtroEstado);
+        }
+
+        const { data, error } = await queryDB.order('asegurado');
+
+        if (error || !data) return [];
+
+        // Aplicar fuzzy search
+        const resultados = busquedaFuzzy(query, data, 'asegurado', 0.4);
+
+        // Ordenar por score de similitud y devolver los items
+        return resultados.map(r => r.item);
+    } catch (e) {
+        console.error('Error en búsqueda fuzzy:', e);
+        return [];
+    }
+}
+
+// Mostrar alerta de búsqueda fuzzy
+function mostrarAlertaFuzzy(busqueda, cantidadResultados) {
+    const alertaExistente = document.querySelector('.fuzzy-alert');
+    if (alertaExistente) alertaExistente.remove();
+
+    const alerta = document.createElement('div');
+    alerta.className = 'fuzzy-alert';
+    alerta.innerHTML = `
+        <span>✨ No se encontró "<strong>${busqueda}</strong>" exactamente, pero encontramos ${cantidadResultados} resultado(s) similar(es)</span>
+        <button onclick="this.parentElement.remove()" style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 0 5px;">×</button>
+    `;
+    alerta.style.cssText = `
+        background: linear-gradient(135deg, #fff3cd, #ffeeba);
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 12px 15px;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: slideDown 0.3s ease;
+    `;
+
+    const searchBar = document.querySelector('.search-bar');
+    if (searchBar) {
+        searchBar.insertAdjacentElement('afterend', alerta);
     }
 }
 
