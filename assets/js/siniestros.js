@@ -11,10 +11,11 @@ import { getClienteSupabase, manejarErrorSesion } from './supabase.js';
 import { getUsuarioActual, getUserId } from './auth.js';
 import {
     cacheManager,
-    debounce,
     busquedaFuzzy,
     obtenerSiniestrosPendientesSeguimiento,
     obtenerSaludoFormal,
+    calcularDiasTranscurridos,
+    requiereSeguimiento,
     DIAS_ALERTA_SEGUIMIENTO,
     LIMITE_POR_PAGINA
 } from './utils.js';
@@ -124,9 +125,10 @@ async function buscarConFuzzy(query, filtroEstado) {
         const userId = await getUserId();
         if (!userId) return [];
 
+        // Proyección explícita para búsqueda fuzzy
         let queryDB = clienteSupabase
             .from('siniestros')
-            .select('*')
+            .select('id, numero, asegurado, sexo, telefono, fecha, tipo, estado, monto, taller, observaciones, created_at')
             .eq('user_id', userId);
 
         if (filtroEstado) {
@@ -150,8 +152,32 @@ async function buscarConFuzzy(query, filtroEstado) {
 // ============================================
 
 /**
- * Carga siniestros desde Supabase
- * @returns {Object} { success, data, totalRegistros, fuzzyUsado, fuzzyQuery, pendientesSeguimiento, error }
+ * Genera clave de cache basada en userId, página, orden y filtros
+ */
+function generarClaveCacheSiniestros(userId, pagina, orden, filtros) {
+    return `siniestros_${userId}_p${pagina}_${orden.columna}_${orden.direccion}_${filtros.asegurado}_${filtros.numero}_${filtros.estado}`;
+}
+
+/**
+ * Invalida el cache de siniestros
+ * Se llama cuando hay cambios (crear, editar, eliminar)
+ */
+function invalidarCacheSiniestros() {
+    try {
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+            if (key.startsWith(cacheManager.prefix + 'siniestros_')) {
+                localStorage.removeItem(key);
+            }
+        });
+    } catch (e) {
+        // Fallar silenciosamente
+    }
+}
+
+/**
+ * Carga siniestros desde Supabase con cache inteligente
+ * @returns {Object} { success, data, totalRegistros, fuzzyUsado, fuzzyQuery, pendientesSeguimiento, error, fromCache }
  */
 export async function cargarSiniestros(pagina = 0, aplicarFiltros = false) {
     const clienteSupabase = getClienteSupabase();
@@ -162,15 +188,46 @@ export async function cargarSiniestros(pagina = 0, aplicarFiltros = false) {
 
     paginaActual = pagina;
 
-    try {
-        const userId = await getUserId();
-        if (!userId) {
-            return { success: false, error: 'No hay usuario autenticado' };
-        }
+    // Obtener userId una sola vez
+    const userId = await getUserId();
+    if (!userId) {
+        return { success: false, error: 'No hay usuario autenticado' };
+    }
 
+    // Intentar obtener del cache (con o sin filtros)
+    try {
+        const cacheKey = generarClaveCacheSiniestros(userId, pagina, ordenActual, filtrosActuales);
+        const cachedData = cacheManager.get(cacheKey);
+
+        if (cachedData) {
+            siniestros = cachedData.siniestros || [];
+            totalRegistros = cachedData.totalRegistros || 0;
+
+            console.log(`✅ ${siniestros.length} siniestros cargados desde CACHE (página ${pagina + 1})`);
+
+            return {
+                success: true,
+                data: siniestros,
+                totalRegistros,
+                paginaActual,
+                fuzzyUsado: false,
+                fuzzyQuery: null,
+                pendientesSeguimiento: 0,
+                diasAlerta: DIAS_ALERTA_SEGUIMIENTO,
+                fromCache: true
+            };
+        }
+    } catch (e) {
+        // Si falla el cache, continuar con la consulta normal
+        console.warn('Error al verificar cache, continuando con consulta:', e);
+    }
+
+    try {
+
+        // Proyección explícita: solo traer las columnas necesarias
         let query = clienteSupabase
             .from('siniestros')
-            .select('*', { count: 'exact' })
+            .select('id, numero, asegurado, sexo, telefono, fecha, tipo, estado, monto, poliza, taller, observaciones, created_at', { count: 'exact' })
             .eq('user_id', userId);
 
         // Aplicar filtros si están activos
@@ -206,7 +263,14 @@ export async function cargarSiniestros(pagina = 0, aplicarFiltros = false) {
             throw error;
         }
 
-        siniestros = data || [];
+        // Precalcular campos derivados una sola vez
+        const siniestrosConCalculos = (data || []).map(siniestro => ({
+            ...siniestro,
+            diasTranscurridos: calcularDiasTranscurridos(siniestro.fecha),
+            requiereSeguimiento: requiereSeguimiento(siniestro)
+        }));
+
+        siniestros = siniestrosConCalculos;
         totalRegistros = count || 0;
 
         let fuzzyUsado = false;
@@ -216,8 +280,14 @@ export async function cargarSiniestros(pagina = 0, aplicarFiltros = false) {
         if (siniestros.length === 0 && filtrosActuales.asegurado && filtrosActuales.asegurado.length >= 2) {
             const resultadosFuzzy = await buscarConFuzzy(filtrosActuales.asegurado, filtrosActuales.estado);
             if (resultadosFuzzy.length > 0) {
-                siniestros = resultadosFuzzy;
-                totalRegistros = resultadosFuzzy.length;
+                // Precalcular campos derivados también para resultados fuzzy
+                const fuzzyConCalculos = resultadosFuzzy.map(siniestro => ({
+                    ...siniestro,
+                    diasTranscurridos: calcularDiasTranscurridos(siniestro.fecha),
+                    requiereSeguimiento: requiereSeguimiento(siniestro)
+                }));
+                siniestros = fuzzyConCalculos;
+                totalRegistros = fuzzyConCalculos.length;
                 fuzzyUsado = true;
                 fuzzyQuery = filtrosActuales.asegurado;
             }
@@ -230,10 +300,19 @@ export async function cargarSiniestros(pagina = 0, aplicarFiltros = false) {
             pendientesSeguimiento = pendientes.length;
         }
 
-        // Guardar en caché
-        cacheManager.set('siniestros', siniestros);
+        // Guardar en caché con clave específica (userId ya está disponible)
+        try {
+            const cacheKey = generarClaveCacheSiniestros(userId, pagina, ordenActual, filtrosActuales);
+            cacheManager.set(cacheKey, {
+                siniestros,
+                totalRegistros,
+                paginaActual
+            });
+        } catch (e) {
+            // Fallar silenciosamente si no se puede cachear
+        }
 
-        console.log(`✅ ${siniestros.length} siniestros cargados (página ${pagina + 1}, total: ${totalRegistros})`);
+        console.log(`✅ ${siniestros.length} siniestros cargados desde DB (página ${pagina + 1}, total: ${totalRegistros})`);
 
         return {
             success: true,
@@ -243,7 +322,8 @@ export async function cargarSiniestros(pagina = 0, aplicarFiltros = false) {
             fuzzyUsado,
             fuzzyQuery,
             pendientesSeguimiento,
-            diasAlerta: DIAS_ALERTA_SEGUIMIENTO
+            diasAlerta: DIAS_ALERTA_SEGUIMIENTO,
+            fromCache: false
         };
     } catch (error) {
         console.error('Error al cargar siniestros:', error);
@@ -321,6 +401,9 @@ export async function crearSiniestro(datos) {
 
         if (error) throw error;
 
+        // Invalidar cache después de crear
+        invalidarCacheSiniestros();
+
         console.log('✅ Siniestro creado:', data[0]);
         return { success: true, data: data[0] };
     } catch (error) {
@@ -369,6 +452,9 @@ export async function actualizarSiniestro(id, datos) {
 
         if (error) throw error;
 
+        // Invalidar cache después de actualizar
+        invalidarCacheSiniestros();
+
         console.log('✅ Siniestro actualizado:', data[0]);
         return { success: true, data: data[0] };
     } catch (error) {
@@ -400,6 +486,9 @@ export async function eliminarSiniestro(id) {
             .eq('id', id);
 
         if (error) throw error;
+
+        // Invalidar cache después de eliminar
+        invalidarCacheSiniestros();
 
         console.log('✅ Siniestro eliminado');
         return { success: true };

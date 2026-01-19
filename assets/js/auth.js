@@ -9,6 +9,7 @@ import { getClienteSupabase } from './supabase.js';
 // ============================================
 
 let usuarioActual = null;
+let cachedUserId = null; // Cache en memoria para el userId
 
 // ============================================
 // GETTERS Y SETTERS
@@ -25,19 +26,37 @@ export function setUsuarioActual(usuario) {
 /**
  * Obtiene el UUID del usuario autenticado desde Supabase Auth
  * Esta es la fuente única de verdad para RLS
+ * Utiliza cache en memoria para evitar llamadas repetidas
  * @returns {Promise<string|null>} UUID del usuario o null si no hay sesión
  */
 export async function getUserId() {
+    // Si ya tenemos el userId en cache, retornarlo inmediatamente
+    if (cachedUserId) {
+        return cachedUserId;
+    }
+
     const clienteSupabase = getClienteSupabase();
     if (!clienteSupabase) return null;
 
     try {
         const { data: { user } } = await clienteSupabase.auth.getUser();
-        return user ? user.id : null;
+        if (user && user.id) {
+            cachedUserId = user.id; // Cachear el userId
+            return cachedUserId;
+        }
+        return null;
     } catch (e) {
         console.error('Error obteniendo user ID:', e);
         return null;
     }
+}
+
+/**
+ * Limpia el cache del userId
+ * Debe llamarse cuando el usuario cierra sesión
+ */
+export function clearUserIdCache() {
+    cachedUserId = null;
 }
 
 // ============================================
@@ -153,6 +172,7 @@ export async function cerrarSesion() {
     localStorage.removeItem('userSession');
     localStorage.removeItem('userProfile');
     usuarioActual = null;
+    clearUserIdCache(); // Limpiar cache del userId
     window.location.href = 'login.html';
 }
 

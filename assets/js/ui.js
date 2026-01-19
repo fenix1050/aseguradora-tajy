@@ -376,15 +376,13 @@ export function mostrarAlertaSeguimiento(cantidadPendientes, diasAlerta) {
 
 /**
  * Renderiza la tabla de siniestros
- * @param {Array} siniestros - Lista de siniestros a renderizar
+ * @param {Array} siniestros - Lista de siniestros (con campos precalculados)
  * @param {Object} callbacks - Callbacks para los botones de acción
  * @param {Function} callbacks.onEditar - Callback para editar (recibe id)
  * @param {Function} callbacks.onEnviarMensaje - Callback para enviar mensaje (recibe id)
  * @param {Function} callbacks.onEliminar - Callback para eliminar (recibe id)
- * @param {Function} calcularDiasTranscurridos - Función para calcular días
- * @param {Function} requiereSeguimiento - Función para verificar seguimiento
  */
-export function actualizarTabla(siniestros, callbacks, calcularDiasTranscurridos, requiereSeguimiento) {
+export function actualizarTabla(siniestros, callbacks) {
     const tbody = document.getElementById('listaSiniestros');
     tbody.innerHTML = '';
 
@@ -396,8 +394,9 @@ export function actualizarTabla(siniestros, callbacks, calcularDiasTranscurridos
     siniestros.forEach(s => {
         const estadoBadge = `badge-${s.estado}`;
         const esSiniestroTotal = s.monto === 'Sí';
-        const necesitaSeguimiento = requiereSeguimiento(s);
-        const diasTranscurridos = calcularDiasTranscurridos(s.fecha);
+        // Usar valores precalculados en lugar de calcular cada vez
+        const necesitaSeguimiento = s.requiereSeguimiento || false;
+        const diasTranscurridos = s.diasTranscurridos || 0;
         const tr = document.createElement('tr');
 
         // Aplicar estilo especial si es siniestro total

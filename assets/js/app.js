@@ -12,8 +12,6 @@ import { verificarSesion, cerrarSesion, getUsuarioActual } from './auth.js';
 import {
     debounce,
     validarCampo,
-    calcularDiasTranscurridos,
-    requiereSeguimiento,
     LIMITE_POR_PAGINA
 } from './utils.js';
 import {
@@ -145,12 +143,12 @@ async function handleCargarSiniestros(pagina = 0, aplicarFiltros = false) {
         return;
     }
 
-    // Renderizar tabla
+    // Renderizar tabla (los siniestros ya vienen con campos precalculados)
     actualizarTabla(resultado.data, {
         onEditar: handleEditarSiniestro,
         onEnviarMensaje: handleEnviarMensaje,
         onEliminar: handleEliminarSiniestro
-    }, calcularDiasTranscurridos, requiereSeguimiento);
+    });
 
     // Actualizar estadísticas
     actualizarEstadisticas(resultado.data);
