@@ -586,6 +586,9 @@ window.generarReporte = handleGenerarReporte;
 window.exportarExcel = handleExportarExcel;
 window.crearUsuario = handleCrearUsuario;
 window.cargarSiniestros = handleCargarSiniestros;
+window.cambiarTabDirecto = cambiarTabDirecto;
+window.validarCampo = validarCampo;
+window.busquedaInteligenteDebounced = handleBusquedaInteligente;
 
 // ============================================
 // INICIO

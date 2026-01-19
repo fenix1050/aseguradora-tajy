@@ -7,7 +7,7 @@
 // - Lógica de negocio
 // NO maneja DOM ni UI directamente
 
-import { getClienteSupabase } from './supabase.js';
+import { getClienteSupabase, manejarErrorSesion } from './supabase.js';
 import { getUsuarioActual, getUserId } from './auth.js';
 import {
     cacheManager,
@@ -196,7 +196,15 @@ export async function cargarSiniestros(pagina = 0, aplicarFiltros = false) {
 
         const { data, error, count } = await query;
 
-        if (error) throw error;
+        if (error) {
+            // Intentar manejar error de sesión expirada
+            const errorManejado = await manejarErrorSesion(error);
+            if (errorManejado) {
+                // Reintentar la carga después de refrescar el token
+                return cargarSiniestros(pagina, aplicarFiltros);
+            }
+            throw error;
+        }
 
         siniestros = data || [];
         totalRegistros = count || 0;
