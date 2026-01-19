@@ -7,12 +7,18 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="logo/logo.png">
 
     <title>Sistema de Gestión - Aseguradora Tajy</title>
+    
 
     <!-- Cargar Supabase Client Library desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -37,7 +43,7 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #0056b3 0%, #0066cc 100%);
             min-height: 100vh;
             padding: 20px;
@@ -53,7 +59,7 @@
             padding: 20px 30px;
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            margin-bottom: 48px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -136,6 +142,8 @@
         .tab-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            background: var(--tajy-red);
+            color: white;
         }
 
         .tab-content {
@@ -151,28 +159,33 @@
             border-radius: 15px;
             padding: 25px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            margin-bottom: 32px;
         }
 
         .card-title {
             color: var(--primary);
             font-size: 1.3em;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             padding-bottom: 10px;
             border-bottom: 2px solid var(--primary);
+        }
+
+        .card-subtitle {
+        font-size: 0.9rem;
+         color: #6b7280;
         }
 
         .form-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
+            gap: 20px;
             margin-bottom: 20px;
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 8px;
         }
 
         .form-group label {
@@ -430,13 +443,14 @@
         }
 
         .stat-value {
-            font-size: 2.5em;
-            font-weight: bold;
+            font-size: 2.6em;
+            font-weight: 700;
             color: var(--primary);
         }
 
         .stat-label {
-            color: #666;
+            color: #6b7280;
+            font-size: 0.9rem;
             margin-top: 5px;
         }
 
@@ -594,6 +608,30 @@
             background: #003d82;
         }
 
+        /* Alertas de seguimiento */
+        .alerta-seguimiento {
+            display: inline-block;
+            animation: pulse-alerta 1.5s ease-in-out infinite;
+            cursor: help;
+            font-size: 1em;
+        }
+
+        @keyframes pulse-alerta {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1);
+            }
+        }
+
+        .fila-seguimiento {
+            background-color: #ffe6e6 !important;
+            border-left: 4px solid #dc3545 !important;
+        }
+
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -613,18 +651,177 @@
                 align-items: center;
             }
         }
+
+        /* === ESTILO TAJY / MODERNO TECNOLÓGICO === */
+        :root {
+            --tajy-red: #c4161c;
+            --tajy-red-dark: #a11217;
+            --bg-main: #f6f7f9;
+            --bg-card: #ffffff;
+            --border-soft: #e5e7eb;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+        }
+
+        body {
+            background: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(180deg, var(--tajy-red), var(--tajy-red-dark));
+            color: white;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+        }
+
+        .header h1,
+        .header p,
+        .user-info {
+            color: white !important;
+        }
+
+        .connection-status {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        /* LOGO IMAGEN */
+        .logo-img {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .header-divider {
+            width: 1px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 0 20px;
+        }
+
+        .header-titles h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: white;
+            margin: 0;
+        }
+
+        .header-titles p {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin: 4px 0 0 0;
+        }
+
+        /* STATS */
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 18px;
+            border: 1px solid var(--border-soft);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+
+        .stat-value {
+            color: var(--tajy-red);
+        }
+
+        /* TABS */
+        .tabs {
+            background: transparent;
+            gap: 20px;
+        }
+
+        .tab-button {
+            background: var(--bg-card);
+            border-radius: 18px;
+            border: 1px solid var(--border-soft);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .tab-button.active {
+            background: var(--tajy-red);
+            color: white;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--bg-card);
+            border-radius: 22px;
+            border: 1px solid var(--border-soft);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        }
+
+        .card-title {
+            border-bottom: none;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* BUTTONS */
+        .btn {
+            border-radius: 14px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--tajy-red), var(--tajy-red-dark));
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            filter: brightness(1.05);
+            background: linear-gradient(135deg, var(--tajy-red), var(--tajy-red-dark));
+        }
+
+        /* INPUTS */
+        input, select, textarea {
+            border-radius: 12px;
+            border: 1px solid var(--border-soft);
+            background: #fafafa;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--tajy-red);
+            box-shadow: 0 0 0 3px rgba(196,22,28,0.15);
+        }
+
+        /* TABLE */
+        th {
+            background: var(--tajy-red);
+        }
+
+        th[data-sort]:hover {
+            background: var(--tajy-red-dark);
+        }
+
+        tr:hover {
+            background: #fdf2f2;
+        }
+
+        /* LOGOUT */
+        .logout-btn {
+            background: white;
+            color: var(--tajy-red);
+        }
+
+        .logout-btn:hover {
+            background: #fee2e2;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div class="logo-section">
-                <div class="logo">
-                    <img src="logo/logo.png" alt="Logo Aseguradora Tajy">
-                </div>
-                <div>
-                    <h1>Aseguradora Tajy - Area Digital</h1>
-                    <p style="margin: 0; color: #666;">Sistema de Gestión de Siniestros</p>
+                <img src="logo/logo.svg" alt="Aseguradora Tajy" class="logo-img">
+                <div class="header-divider"></div>
+                <div class="header-titles">
+                    <h1>Area Digital</h1>
+                    <p>Sistema de Gestión de Siniestros</p>
                 </div>
             </div>
             <div class="user-info">
@@ -698,11 +895,11 @@
                     <table id="tablaSiniestros">
                         <thead>
                             <tr>
-                                <th data-sort="numero" onclick="ordenarPor('numero')">Nº Siniestro</th>
-                                <th data-sort="asegurado" onclick="ordenarPor('asegurado')">Asegurado</th>
-                                <th data-sort="telefono" onclick="ordenarPor('telefono')">Teléfono</th>
-                                <th data-sort="fecha" onclick="ordenarPor('fecha')">Fecha</th>
-                                <th data-sort="estado" onclick="ordenarPor('estado')">Estado</th>
+                                <th data-sort="numero" onclick="ordenarPor('numero')" onkeydown="if(event.key==='Enter'||event.key===' '){ordenarPor('numero');event.preventDefault();}">Nº Siniestro</th>
+                                <th data-sort="asegurado" onclick="ordenarPor('asegurado')" onkeydown="if(event.key==='Enter'||event.key===' '){ordenarPor('asegurado');event.preventDefault();}">Asegurado</th>
+                                <th data-sort="telefono" onclick="ordenarPor('telefono')" onkeydown="if(event.key==='Enter'||event.key===' '){ordenarPor('telefono');event.preventDefault();}">Teléfono</th>
+                                <th data-sort="fecha" onclick="ordenarPor('fecha')" onkeydown="if(event.key==='Enter'||event.key===' '){ordenarPor('fecha');event.preventDefault();}">Fecha</th>
+                                <th data-sort="estado" onclick="ordenarPor('estado')" onkeydown="if(event.key==='Enter'||event.key===' '){ordenarPor('estado');event.preventDefault();}">Estado</th>
                                 <th>Siniestro Total</th>
                                 <th>Acciones</th>
                             </tr>
@@ -719,21 +916,21 @@
         <div id="nuevo" class="tab-content">
             <div class="card">
                 <h2 class="card-title">Registrar Nuevo Siniestro</h2>
-                <form id="formNuevoSiniestro" onsubmit="agregarSiniestro(event)">
-                    <div class="form-row">
+                <form id="formNuevoSiniestro" onsubmit="agregarSiniestro(event)" style="max-width: 700px;">
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
                         <div class="form-group">
-                            <label>Nº de Siniestro *</label>
-                            <input type="text" name="numero" id="numeroNuevo" placeholder="2026-001" required onblur="validarCampo('numero', this.value, this)">
+                            <label for="numeroNuevo">Nº de Siniestro *</label>
+                            <input type="text" name="numero" id="numeroNuevo" placeholder="Ej: 226500" required onblur="validarCampo('numero', this.value, this)">
                         </div>
                         <div class="form-group">
-                            <label>Nombre del Asegurado *</label>
+                            <label for="aseguradoNuevo">Nombre del Asegurado *</label>
                             <input type="text" name="asegurado" id="aseguradoNuevo" required onblur="validarCampo('asegurado', this.value, this)">
                         </div>
                     </div>
 
-                    <div class="form-row">
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
                         <div class="form-group">
-                            <label>Sexo del Asegurado</label>
+                            <label for="sexoNuevo">Sexo del Asegurado</label>
                             <select name="sexo" id="sexoNuevo">
                                 <option value="">No especificado</option>
                                 <option value="M">Masculino</option>
@@ -741,23 +938,22 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Teléfono (WhatsApp) *</label>
+                            <label for="telefonoNuevo">Teléfono (WhatsApp) *</label>
                             <input type="tel" id="telefonoNuevo" name="telefono" value="+595 " placeholder="+595 981 123456" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="siniestroTotal">¿Siniestro Total? *</label>
+                            <select name="siniestro_total" id="siniestroTotal" required>
+                                <option value="">Seleccione...</option>
+                                <option value="No">No</option>
+                                <option value="Sí">Sí</option>
+                            </select>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="siniestroTotal">¿Es Siniestro Total? *</label>
-                        <select name="siniestro_total" id="siniestroTotal" required>
-                            <option value="">Seleccione...</option>
-                            <option value="No">No</option>
-                            <option value="Sí">Sí</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Observaciones</label>
-                        <textarea name="observaciones" rows="3"></textarea>
+                        <label for="observacionesNuevo">Observaciones</label>
+                        <textarea name="observaciones" id="observacionesNuevo" rows="3"></textarea>
                     </div>
 
                     <button type="submit" class="btn btn-primary" id="btnGuardar">💾 Guardar Siniestro</button>
@@ -783,21 +979,21 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Nombre del Asegurado</label>
+                        <label for="nombreMensaje">Nombre del Asegurado</label>
                         <input type="text" id="nombreMensaje" placeholder="Nombre del asegurado">
                     </div>
                     <div class="form-group">
-                        <label>Nº de Siniestro</label>
+                        <label for="numeroMensaje">Nº de Siniestro</label>
                         <input type="text" id="numeroMensaje" placeholder="2026-XXXXX">
                     </div>
                     <div class="form-group">
-                        <label>Taller (si aplica)</label>
+                        <label for="tallerMensaje">Taller (si aplica)</label>
                         <input type="text" id="tallerMensaje" placeholder="Nombre del taller">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Sexo del Asegurado</label>
+                    <label for="sexoMensaje">Sexo del Asegurado</label>
                     <select id="sexoMensaje">
                         <option value="">No especificado</option>
                         <option value="M">Masculino</option>
@@ -826,11 +1022,11 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Fecha Desde</label>
+                        <label for="fechaDesde">Fecha Desde</label>
                         <input type="date" id="fechaDesde">
                     </div>
                     <div class="form-group">
-                        <label>Fecha Hasta</label>
+                        <label for="fechaHasta">Fecha Hasta</label>
                         <input type="date" id="fechaHasta">
                     </div>
                 </div>
@@ -852,22 +1048,22 @@
                     <form id="formNuevoUsuario" onsubmit="crearUsuario(event)">
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Nombre Completo *</label>
-                                <input type="text" name="nombre" required>
+                                <label for="nombreUsuario">Nombre Completo *</label>
+                                <input type="text" name="nombre" id="nombreUsuario" required>
                             </div>
                             <div class="form-group">
-                                <label>Email *</label>
-                                <input type="email" name="email" required>
+                                <label for="emailUsuario">Email *</label>
+                                <input type="email" name="email" id="emailUsuario" required>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>Contraseña *</label>
-                                <input type="password" name="password" required minlength="6">
+                                <label for="passwordUsuario">Contraseña *</label>
+                                <input type="password" name="password" id="passwordUsuario" required minlength="6">
                             </div>
                             <div class="form-group">
-                                <label>Rol *</label>
-                                <select name="rol" required>
+                                <label for="rolUsuario">Rol *</label>
+                                <select name="rol" id="rolUsuario" required>
                                     <option value="tramitador">Tramitador</option>
                                     <option value="admin">Administrador</option>
                                 </select>
@@ -905,27 +1101,27 @@
     <!-- Modal para editar -->
     <div id="modalEditar" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="cerrarModal()">&times;</span>
+            <button class="close-modal" onclick="cerrarModal()" aria-label="Cerrar modal">&times;</button>
             <h2 style="color: var(--primary); margin-bottom: 20px;">Editar Siniestro</h2>
             <form id="formEditar" onsubmit="guardarEdicion(event)">
                 <input type="hidden" id="editId">
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Nº Siniestro</label>
+                        <label for="editNumero">Nº Siniestro</label>
                         <input type="text" id="editNumero">
                     </div>
                     <div class="form-group">
-                        <label>Nombre del Asegurado</label>
+                        <label for="editAsegurado">Nombre del Asegurado</label>
                         <input type="text" id="editAsegurado">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Teléfono</label>
+                        <label for="editTelefono">Teléfono</label>
                         <input type="tel" id="editTelefono">
                     </div>
                     <div class="form-group">
-                        <label>Sexo</label>
+                        <label for="editSexo">Sexo</label>
                         <select id="editSexo">
                             <option value="">No especificado</option>
                             <option value="M">Masculino</option>
@@ -935,7 +1131,7 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Estado</label>
+                        <label for="editEstado">Estado</label>
                         <select id="editEstado" required>
                             <option value="pendiente">Pendiente</option>
                             <option value="proceso">En Proceso</option>
@@ -945,16 +1141,19 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Monto</label>
-                        <input type="text" id="editMonto">
+                        <label for="editSiniestroTotal">¿Es Siniestro Total?</label>
+                        <select id="editSiniestroTotal">
+                            <option value="No">No</option>
+                            <option value="Sí">Sí</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Taller</label>
+                    <label for="editTaller">Taller</label>
                     <input type="text" id="editTaller">
                 </div>
                 <div class="form-group">
-                    <label>Observaciones</label>
+                    <label for="editObservaciones">Observaciones</label>
                     <textarea id="editObservaciones" rows="3"></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">💾 Guardar Cambios</button>
@@ -963,6 +1162,6 @@
     </div>
 
     <script src="config.js"></script>
-    <script src="app.js?v=4.1"></script>
+    <script type="module" src="assets/js/app.js"></script>
 </body>
 </html>
