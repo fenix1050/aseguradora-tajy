@@ -377,7 +377,11 @@ export async function crearSiniestro(datos) {
     }
 
     try {
-        const fechaActual = new Date().toISOString().split('T')[0];
+        // Obtener fecha local de Paraguay (GMT-4)
+        const ahora = new Date();
+        const offsetParaguay = -4 * 60; // Paraguay está en GMT-4
+        const fechaParaguay = new Date(ahora.getTime() + (ahora.getTimezoneOffset() + offsetParaguay) * 60000);
+        const fechaActual = fechaParaguay.toISOString().split('T')[0];
 
         const nuevoSiniestro = {
             numero: datos.numero,
