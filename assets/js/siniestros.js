@@ -163,16 +163,7 @@ function generarClaveCacheSiniestros(userId, pagina, orden, filtros) {
  * Se llama cuando hay cambios (crear, editar, eliminar)
  */
 function invalidarCacheSiniestros() {
-    try {
-        const keys = Object.keys(localStorage);
-        keys.forEach(key => {
-            if (key.startsWith(cacheManager.prefix + 'siniestros_')) {
-                localStorage.removeItem(key);
-            }
-        });
-    } catch (e) {
-        // Fallar silenciosamente
-    }
+    cacheManager.invalidate('siniestros_');
 }
 
 /**

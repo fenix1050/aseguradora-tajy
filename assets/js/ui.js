@@ -104,15 +104,45 @@ export function mostrarSkeletonTabla() {
 }
 
 // ============================================
-// TABS
+// INICIALIZACIÓN DE CALLBACKS
 // ============================================
 
-// Callback para cuando se cambia a tab admin (se configura desde app.js)
-let onTabAdminCallback = null;
+let callbacks = {
+    onTabAdmin: null,
+    onCargarSiniestros: null,
+    onFiltrarTabla: null
+};
 
-export function setOnTabAdminCallback(callback) {
-    onTabAdminCallback = callback;
+let callbacksInicializados = false;
+let warningEmitido = false;
+
+/**
+ * Inicializa los callbacks de UI desde app.js
+ * Debe llamarse ANTES de usar cualquier función UI que dependa de handlers
+ */
+export function init(handlers = {}) {
+    callbacks = {
+        onTabAdmin: handlers.onTabAdmin || null,
+        onCargarSiniestros: handlers.onCargarSiniestros || null,
+        onFiltrarTabla: handlers.onFiltrarTabla || null
+    };
+    callbacksInicializados = true;
 }
+
+/**
+ * Helper interno para advertir si callbacks no fueron inicializados
+ * Solo advierte una vez para evitar spam en consola
+ */
+function advertirSiNoInicializado(nombreCallback) {
+    if (!callbacksInicializados && !warningEmitido) {
+        console.warn(`[UI] Callbacks no inicializados. ¿Olvidaste llamar a ui.init()? (intentando usar: ${nombreCallback})`);
+        warningEmitido = true;
+    }
+}
+
+// ============================================
+// TABS
+// ============================================
 
 export function cambiarTabDirecto(tabId) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -125,8 +155,9 @@ export function cambiarTabDirecto(tabId) {
     if (tabButton) tabButton.classList.add('active');
 
     // Ejecutar callback si es tab admin
-    if (tabId === 'admin' && onTabAdminCallback) {
-        onTabAdminCallback();
+    if (tabId === 'admin') {
+        advertirSiNoInicializado('onTabAdmin');
+        callbacks.onTabAdmin?.();
     }
 }
 
@@ -145,13 +176,6 @@ export function abrirModal() {
 // ============================================
 // PAGINACIÓN
 // ============================================
-
-// Callback para cargar siniestros (se configura desde app.js)
-let cargarSiniestrosCallback = null;
-
-export function setCargarSiniestrosCallback(callback) {
-    cargarSiniestrosCallback = callback;
-}
 
 export function actualizarControlesPaginacion(paginaActual, totalRegistros, limitePorPagina) {
     const totalPaginas = Math.ceil(totalRegistros / limitePorPagina);
@@ -201,8 +225,9 @@ export function actualizarControlesPaginacion(paginaActual, totalRegistros, limi
     contenedor.querySelectorAll('button[data-pagina]').forEach(btn => {
         btn.addEventListener('click', function() {
             const pagina = parseInt(this.getAttribute('data-pagina'));
-            if (cargarSiniestrosCallback && !this.disabled) {
-                cargarSiniestrosCallback(pagina, true);
+            if (!this.disabled) {
+                advertirSiNoInicializado('onCargarSiniestros');
+                callbacks.onCargarSiniestros?.(pagina, true);
             }
         });
     });
@@ -230,13 +255,6 @@ export function actualizarIconosOrdenamiento(ordenActual) {
 // ============================================
 // SUGERENCIAS DE BÚSQUEDA (FUZZY)
 // ============================================
-
-// Callback para filtrar tabla (se configura desde app.js)
-let filtrarTablaCallback = null;
-
-export function setFiltrarTablaCallback(callback) {
-    filtrarTablaCallback = callback;
-}
 
 export function mostrarSugerencias(input, sugerencias) {
     ocultarSugerencias();
@@ -292,9 +310,8 @@ export function mostrarSugerencias(input, sugerencias) {
         item.addEventListener('click', () => {
             input.value = sug.item.asegurado;
             ocultarSugerencias();
-            if (filtrarTablaCallback) {
-                filtrarTablaCallback();
-            }
+            advertirSiNoInicializado('onFiltrarTabla');
+            callbacks.onFiltrarTabla?.();
         });
 
         container.appendChild(item);
@@ -469,22 +486,43 @@ export function llenarFormularioEdicion(siniestro) {
     document.getElementById('editNumero').value = siniestro.numero;
     document.getElementById('editAsegurado').value = siniestro.asegurado;
     document.getElementById('editTelefono').value = siniestro.telefono;
-    document.getElementById('editSexo').value = siniestro.sexo || '';
+
+    // Sexo con radio buttons
+    const sexoM = document.getElementById('editSexoM');
+    const sexoF = document.getElementById('editSexoF');
+    if (sexoM) sexoM.checked = siniestro.sexo === 'M';
+    if (sexoF) sexoF.checked = siniestro.sexo === 'F';
+
     document.getElementById('editEstado').value = siniestro.estado;
-    document.getElementById('editSiniestroTotal').value = siniestro.monto === 'Sí' ? 'Sí' : 'No';
+
+    // Siniestro total con checkbox
+    const checkSiniestroTotal = document.getElementById('editSiniestroTotal');
+    if (checkSiniestroTotal) checkSiniestroTotal.checked = siniestro.monto === 'Sí';
+
     document.getElementById('editTaller').value = siniestro.taller || '';
     document.getElementById('editObservaciones').value = siniestro.observaciones || '';
 }
 
 export function leerFormularioEdicion() {
+    // Leer sexo de radio buttons
+    const sexoM = document.getElementById('editSexoM');
+    const sexoF = document.getElementById('editSexoF');
+    let sexo = '';
+    if (sexoM && sexoM.checked) sexo = 'M';
+    else if (sexoF && sexoF.checked) sexo = 'F';
+
+    // Leer siniestro total de checkbox
+    const checkSiniestroTotal = document.getElementById('editSiniestroTotal');
+    const siniestroTotal = checkSiniestroTotal && checkSiniestroTotal.checked ? 'Sí' : 'No';
+
     return {
         id: parseInt(document.getElementById('editId').value),
         numero: document.getElementById('editNumero').value,
         asegurado: document.getElementById('editAsegurado').value,
         telefono: document.getElementById('editTelefono').value,
-        sexo: document.getElementById('editSexo').value || '',
+        sexo: sexo,
         estado: document.getElementById('editEstado').value,
-        monto: document.getElementById('editSiniestroTotal').value,
+        monto: siniestroTotal,
         taller: document.getElementById('editTaller').value || '',
         observaciones: document.getElementById('editObservaciones').value || ''
     };

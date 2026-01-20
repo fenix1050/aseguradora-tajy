@@ -13,30 +13,57 @@ export const LIMITE_POR_PAGINA = 50;
 // CACHE MANAGER
 // ============================================
 
+// Cache en memoria (session-lifetime)
+const memoriaCache = new Map();
+
 export const cacheManager = {
-    prefix: 'tajy_',
     ttl: 5 * 60 * 1000, // 5 minutos
+
     set: (key, data) => {
         try {
-            const item = { data, timestamp: Date.now() };
-            localStorage.setItem(cacheManager.prefix + key, JSON.stringify(item));
+            memoriaCache.set(key, {
+                data,
+                timestamp: Date.now()
+            });
         } catch (e) {
             console.warn('Error al guardar en caché:', e);
         }
     },
+
     get: (key) => {
         try {
-            const item = localStorage.getItem(cacheManager.prefix + key);
+            const item = memoriaCache.get(key);
             if (!item) return null;
-            const parsed = JSON.parse(item);
-            const age = Date.now() - parsed.timestamp;
+
+            const age = Date.now() - item.timestamp;
             if (age > cacheManager.ttl) {
-                localStorage.removeItem(cacheManager.prefix + key);
+                memoriaCache.delete(key);
                 return null;
             }
-            return parsed.data;
+
+            return item.data;
         } catch (e) {
             return null;
+        }
+    },
+
+    invalidate: (prefix) => {
+        try {
+            for (const key of memoriaCache.keys()) {
+                if (key.startsWith(prefix)) {
+                    memoriaCache.delete(key);
+                }
+            }
+        } catch (e) {
+            console.warn('Error al invalidar caché:', e);
+        }
+    },
+
+    clear: () => {
+        try {
+            memoriaCache.clear();
+        } catch (e) {
+            console.warn('Error al limpiar caché:', e);
         }
     }
 };
