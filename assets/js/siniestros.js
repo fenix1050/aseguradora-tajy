@@ -224,6 +224,25 @@ export async function buscarAseguradosFuzzy(query) {
     return resultados;
 }
 
+/**
+ * Busca siniestros por número de siniestro en el array cargado en memoria
+ * Filtra directamente sin acceder a DB/CACHE
+ * Se usa por handleBusquedaPorNumero en filtros.handlers.js
+ * 
+ * @param {string} query - Número de siniestro a buscar
+ * @returns {Array} Array de siniestros que coinciden
+ */
+export function buscarSiniestrosPorNumero(query) {
+    if (!query || query.length < 1) {
+        return [];
+    }
+
+    const queryLower = query.toLowerCase();
+    return siniestros.filter(s => 
+        s.numero && s.numero.toLowerCase().includes(queryLower)
+    );
+}
+
 // Búsqueda fuzzy cuando no hay resultados exactos
 async function buscarConFuzzy(query, filtroEstado) {
     const clienteSupabase = getClienteSupabase();

@@ -8,7 +8,7 @@
 // - Conecta lógica de negocio con UI
 
 import { inicializarSupabase } from './supabase.js';
-import { verificarSesion, cerrarSesion } from './auth.js';
+import { verificarSesion, cerrarSesion, getPerfilError } from './auth.js';
 import {
     actualizarEstadoConexion,
     mostrarAlerta,
@@ -92,10 +92,22 @@ async function inicializarApp() {
     // Verificar sesión
     const autenticado = await verificarSesion();
     if (!autenticado) {
-        return; // Redirige a login
+        // Verificar si es por error de perfil o por falta de sesión
+        const perfilErr = getPerfilError();
+        if (perfilErr) {
+            // Error de perfil: mostrar alerta pero mantener sesión activa
+            const mensajeError = perfilErr.message || 'No se pudo cargar el perfil del usuario';
+            mostrarAlerta('error', `Advertencia de perfil: ${mensajeError}`);
+            actualizarEstadoConexion(true);
+            // Continuar con la aplicación (sesión válida, pero sin datos de perfil completos)
+            console.warn('⚠️ Continuando con sesión activa a pesar del error de perfil');
+        } else {
+            // Sin sesión: no continuar
+            return;
+        }
+    } else {
+        actualizarEstadoConexion(true);
     }
-
-    actualizarEstadoConexion(true);
 
     // Cargar siniestros iniciales
     await handleCargarSiniestros(0, false);

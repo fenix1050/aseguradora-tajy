@@ -44,7 +44,7 @@ export async function handleCargarSiniestros(pagina = 0, aplicarFiltros = false)
 
     if (!resultado.success) {
         mostrarAlerta('error', 'Error al cargar los siniestros: ' + resultado.error);
-        return;
+        return resultado;
     }
 
     // Renderizar tabla (los siniestros ya vienen con campos precalculados)
@@ -72,6 +72,8 @@ export async function handleCargarSiniestros(pagina = 0, aplicarFiltros = false)
     if (pagina === 0 && !aplicarFiltros && resultado.pendientesSeguimiento > 0) {
         mostrarAlertaSeguimiento(resultado.pendientesSeguimiento, resultado.diasAlerta);
     }
+
+    return resultado;
 }
 
 export async function handleAgregarSiniestro(event) {

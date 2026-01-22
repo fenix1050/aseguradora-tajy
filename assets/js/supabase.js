@@ -25,6 +25,12 @@ function getConfig() {
 // ============================================
 
 export async function inicializarSupabase() {
+    // Si ya está inicializado, retornar el cliente existente
+    if (clienteSupabase) {
+        console.log('✅ Supabase ya inicializado, retornando cliente existente');
+        return { success: true, cliente: clienteSupabase };
+    }
+
     try {
         const config = getConfig();
 
@@ -44,24 +50,31 @@ export async function inicializarSupabase() {
             }
         });
 
-        // Listener para cambios en la autenticación
-        clienteSupabase.auth.onAuthStateChange((event, session) => {
-            console.log('🔐 Auth state changed:', event);
+        // Listener para cambios en la autenticación (solo en index.html, no en login.html)
+        const pageName = window.location.pathname.split('/').pop() || 'index.html';
+        if (pageName !== 'login.html') {
+            clienteSupabase.auth.onAuthStateChange((event, session) => {
+                console.log('🔐 Auth state changed:', event);
 
-            if (event === 'TOKEN_REFRESHED') {
-                console.log('✅ Token refrescado automáticamente');
-            }
+                if (event === 'TOKEN_REFRESHED') {
+                    console.log('✅ Token refrescado automáticamente');
+                }
 
-            if (event === 'SIGNED_OUT') {
-                console.log('🚪 Sesión cerrada');
-                window.location.href = 'login.html';
-            }
+                if (event === 'SIGNED_OUT') {
+                    console.log('🚪 Sesión cerrada');
+                    if (window.location.pathname.split('/').pop() !== 'login.html') {
+                        window.location.href = 'login.html';
+                    }
+                }
 
-            if (event === 'USER_DELETED') {
-                console.log('❌ Usuario eliminado');
-                window.location.href = 'login.html';
-            }
-        });
+                if (event === 'USER_DELETED') {
+                    console.log('❌ Usuario eliminado');
+                    if (window.location.pathname.split('/').pop() !== 'login.html') {
+                        window.location.href = 'login.html';
+                    }
+                }
+            });
+        }
 
         // Verificar conexión con query de prueba
         const { data, error } = await clienteSupabase.from('siniestros').select('count');
@@ -142,7 +155,9 @@ export async function manejarErrorSesion(error) {
 
             if (refreshError || !session) {
                 console.error('❌ No se pudo refrescar la sesión, redirigiendo al login');
-                window.location.href = 'login.html';
+                if (window.location.pathname.split('/').pop() !== 'login.html') {
+                    window.location.href = 'login.html';
+                }
                 return true;
             }
 
@@ -150,7 +165,9 @@ export async function manejarErrorSesion(error) {
             return true;
         } catch (e) {
             console.error('Error al refrescar sesión:', e);
-            window.location.href = 'login.html';
+            if (window.location.pathname.split('/').pop() !== 'login.html') {
+                window.location.href = 'login.html';
+            }
             return true;
         }
     }

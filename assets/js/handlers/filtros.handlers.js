@@ -8,15 +8,18 @@ import {
     actualizarIconosOrdenamiento,
     mostrarSugerencias,
     ocultarSugerencias,
-    mostrarMensajeSinResultados
+    mostrarMensajeSinResultados,
+    actualizarTabla
 } from '../ui.js';
 import {
     setFiltros,
     cambiarOrden,
     getPaginaActual,
-    buscarAseguradosFuzzy
+    buscarAseguradosFuzzy,
+    buscarSiniestrosPorNumero
 } from '../siniestros.js';
-import { handleCargarSiniestros } from './siniestros.handlers.js';
+import { handleCargarSiniestros, handleEditarSiniestro, handleEliminarSiniestro } from './siniestros.handlers.js';
+import { handleEnviarMensaje } from './mensajes.handlers.js';
 
 export async function handleFiltrarTabla() {
     const filtros = leerFiltros();
@@ -85,16 +88,18 @@ export const handleBusquedaInteligente = debounce(async function(input) {
 
 /**
  * FASE 5.2.2: Búsqueda por número de siniestro con feedback visual
- * Captura resultado y muestra mensaje si no hay coincidencias
+ * Filtra del array cargado en memoria (sin recarga de DB/CACHE)
  * 
  * @param {HTMLElement} input - Input de búsqueda por número
  */
 export const handleBusquedaPorNumero = debounce(async function(input) {
     const query = input.value.trim();
 
-    // ✅ AJUSTE 2: Cancelar si query vacía
+    // Si input vacío: restaurar lista completa
     if (query.length === 0) {
         input.classList.remove('searching', 'no-results');
+        // Recargar la lista completa (permitido solo en este caso)
+        await handleCargarSiniestros(0, false);
         return;
     }
 
@@ -103,17 +108,20 @@ export const handleBusquedaPorNumero = debounce(async function(input) {
     input.classList.remove('no-results');
 
     try {
-        // ✅ AJUSTE 2: Capturar resultado para validar si hay datos
-        const resultado = await handleCargarSiniestros(0, true);
+        // ✅ CAMBIO CLAVE: Buscar en MEMORIA (sin recarga)
+        const resultados = buscarSiniestrosPorNumero(query);
         
         input.classList.remove('searching');
         
-        // Si hay datos, éxito silencioso (tabla se actualiza)
-        // Si NO hay datos, mostrar mensaje contextual
-        if (resultado.success && resultado.data && resultado.data.length > 0) {
-            // Búsqueda exitosa
-        } else {
-            // ✅ AJUSTE 2: Mostrar mensaje específico para búsqueda por número
+        // ✅ Renderizar directamente con la misma función que la tabla principal
+        actualizarTabla(resultados, {
+            onEditar: handleEditarSiniestro,
+            onEnviarMensaje: handleEnviarMensaje,
+            onEliminar: handleEliminarSiniestro
+        });
+
+        // Si no hay datos, mostrar mensaje contextual
+        if (resultados.length === 0) {
             mostrarMensajeSinResultados(input, query, 'numero');
         }
     } catch (e) {
