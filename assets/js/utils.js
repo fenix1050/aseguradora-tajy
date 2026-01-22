@@ -181,63 +181,121 @@ export function soundexEspanol(str) {
         [/h/g, ''],          // h muda
         [/x/g, 'ks'],        // x como ks
         [/w/g, 'u'],         // w como u
-        [/([aeiou])\1+/g, '$1'], // vocales repetidas
+        // ✅ REMOVIDO: No simplificar vocales repetidas
+        // Permite distinguir "Maria" vs "Mario" fonéticamente
     ];
 
     reemplazos.forEach(([patron, reemplazo]) => {
         str = str.replace(patron, reemplazo);
     });
 
-    // Tomar primeras consonantes significativas
-    const consonantes = str.replace(/[aeiou]/g, '').slice(0, 4);
-    const primeraVocal = (str.match(/[aeiou]/) || [''])[0];
-
-    return (str[0] || '') + primeraVocal + consonantes;
+    // Tomar primeras consonantes significativas + vocales
+    const primeraLetra = str[0] || '';
+    const resto = str.slice(1).replace(/([aeiou])/g, '').slice(0, 3); // Consonantes
+    
+    return primeraLetra + resto;
 }
 
 // Calcular score de similitud (0-1)
+// FASE 5.1: Ranking fuzzy con 5 niveles de relevancia
+// - Normalización consistente (lowercase + NFD)
+// - Guard clause por longitud mínima
+// - Jerarquía: exact > startsWith > includes > phonetic > levenshtein
+// - Elimina falsos positivos (Juan ≠ Bruno)
 export function calcularSimilitud(busqueda, texto) {
     if (!busqueda || !texto) return 0;
 
-    busqueda = busqueda.toLowerCase().trim();
-    texto = texto.toLowerCase().trim();
+    // ============================================
+    // NORMALIZACIÓN CONSISTENTE
+    // ============================================
+    // Aplicar normalizacion NFD (eliminar acentos) y lowercase
+    busqueda = busqueda
+        .toLowerCase()
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    
+    texto = texto
+        .toLowerCase()
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
 
-    // Coincidencia exacta
-    if (texto === busqueda) return 1;
+    // ============================================
+    // GATE POR LONGITUD MÍNIMA
+    // ============================================
+    // Evita ruido con búsquedas demasiado cortas (< 3 chars)
+    // EXCEPTO: si la coincidencia es exacta
+    if (busqueda.length < 3 && busqueda !== texto) return 0;
 
-    // Contiene el texto exacto
-    if (texto.includes(busqueda)) return 0.95;
+    // ============================================
+    // RANGO 1: EXACTITUD PERFECTA (score = 1.0)
+    // ============================================
+    if (texto === busqueda) return 1.0;
 
-    // Comienza con el texto
-    if (texto.startsWith(busqueda)) return 0.9;
+    // ============================================
+    // RANGO 2: ALTA RELEVANCIA (score >= 0.95)
+    // ============================================
+    
+    // Comienza exacto con la búsqueda (máxima prioridad)
+    if (texto.startsWith(busqueda)) return 0.95;
 
-    // Similitud fonética
+    // Contiene como substring pero NO comienza (ej: "garcia" en "maria garcia")
+    if (texto.includes(busqueda)) return 0.92;
+
+    // ============================================
+    // RANGO 3: BUENA RELEVANCIA (score >= 0.82)
+    // ============================================
+
+    // Buscar palabra exacta dentro del texto (por espacios)
+    const palabrasTexto = texto.split(/\s+/);
+    
+    // 1. Palabra que empieza exacto (ej: buscar "garcia" en "maria garcia lopez")
+    for (const palabra of palabrasTexto) {
+        if (palabra.startsWith(busqueda)) {
+            return 0.90;
+        }
+    }
+
+    // 2. Palabra que contiene exacto (ej: buscar "ard" en "leonard")
+    for (const palabra of palabrasTexto) {
+        if (palabra.includes(busqueda)) {
+            return 0.85;
+        }
+    }
+
+    // Similitud fonética (soundex español)
     const soundex1 = soundexEspanol(busqueda);
     const soundex2 = soundexEspanol(texto);
-    if (soundex1 === soundex2) return 0.85;
+    if (soundex1 && soundex2 && soundex1 === soundex2) {
+        return 0.82; // ✅ Reducido de 0.85 a 0.82 (menos confiable que includes)
+    }
 
-    // Distancia de Levenshtein normalizada
+    // ============================================
+    // RANGO 4: RELEVANCIA MODERADA (score 0.70-0.80)
+    // Levenshtein SOLO si es realmente similar (>= 0.75)
+    // ============================================
+
+    // Distancia de Levenshtein normalizada (penalizar fuerte)
     const distancia = levenshteinDistance(busqueda, texto);
     const maxLen = Math.max(busqueda.length, texto.length);
     const similitudLevenshtein = 1 - (distancia / maxLen);
 
-    // Verificar cada palabra del texto
-    const palabrasTexto = texto.split(/\s+/);
-    let mejorSimilitudPalabra = 0;
-
-    for (const palabra of palabrasTexto) {
-        if (palabra.includes(busqueda)) {
-            mejorSimilitudPalabra = Math.max(mejorSimilitudPalabra, 0.9);
-        } else if (palabra.startsWith(busqueda)) {
-            mejorSimilitudPalabra = Math.max(mejorSimilitudPalabra, 0.85);
-        } else {
-            const distPalabra = levenshteinDistance(busqueda, palabra);
-            const simPalabra = 1 - (distPalabra / Math.max(busqueda.length, palabra.length));
-            mejorSimilitudPalabra = Math.max(mejorSimilitudPalabra, simPalabra * 0.8);
-        }
+    // ✅ MEJORADO: Umbrales más estrictos para Levenshtein
+    if (similitudLevenshtein >= 0.85) {
+        return 0.78; // Solo si > 85% similar
+    } else if (similitudLevenshtein >= 0.80) {
+        return 0.75;
+    } else if (similitudLevenshtein >= 0.75) {
+        return 0.72;
     }
 
-    return Math.max(similitudLevenshtein * 0.7, mejorSimilitudPalabra);
+    // ============================================
+    // RANGO 5: RECHAZAR < 0.75 Levenshtein
+    // ============================================
+    // ✅ MEJORADO: Rechaza cualquier cosa < 0.75 Levenshtein
+    // Evita falsos positivos como "juan" vs "bruno" (0.20 similitud)
+    return 0;
 }
 
 // Buscar con fuzzy matching
@@ -253,6 +311,22 @@ export function busquedaFuzzy(query, items, campo, umbral = 0.4) {
         .sort((a, b) => b.score - a.score);
 
     return resultados;
+}
+
+/**
+ * Normaliza query para búsqueda y cache
+ * FASE 5.2: Preparación para cache de búsqueda
+ * Convierte espacios a guiones para usar como parte de clave de cache
+ * 
+ * @param {string} query - Query sin procesar
+ * @returns {string} Query normalizada (lowercase, trimmed, espacios con _)
+ */
+export function normalizarQueryBusqueda(query) {
+    if (!query) return '';
+    return query
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '_');  // espacios múltiples → guiones bajos
 }
 
 // ============================================

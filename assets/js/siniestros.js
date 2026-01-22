@@ -12,6 +12,7 @@ import { getUsuarioActual, getUserId } from './auth.js';
 import {
     cacheManager,
     busquedaFuzzy,
+    normalizarQueryBusqueda,
     obtenerSiniestrosPendientesSeguimiento,
     obtenerSaludoFormal,
     calcularDiasTranscurridos,
@@ -70,6 +71,85 @@ export function getSiniestroByAsegurado(nombre) {
     return siniestros.find(s => s.asegurado === nombre);
 }
 
+/**
+ * Busca siniestro por ID con fallback a Supabase + cache
+ * 1. Busca en array actual (página)
+ * 2. Busca en cache en memoria
+ * 3. Fallback a Supabase si no encontrado
+ * @param {number} id - ID del siniestro
+ * @returns {Promise<Object|null>} Datos del siniestro o null
+ */
+export async function getSiniestroByIdWithFallback(id) {
+    // 1. Buscar en array actual (comportamiento rápido)
+    let siniestro = siniestros.find(s => s.id === id);
+    if (siniestro) return siniestro;
+
+    // 2. Buscar en cache en memoria
+    const cacheKey = `siniestro_id_${id}`;
+    siniestro = cacheManager.get(cacheKey);
+    if (siniestro) return siniestro;
+
+    // 3. Fallback a Supabase
+    const clienteSupabase = getClienteSupabase();
+    if (!clienteSupabase) return null;
+
+    const userId = await getUserId();
+    if (!userId) return null;
+
+    try {
+        const { data, error } = await clienteSupabase
+            .from('siniestros')
+            .select('*')
+            .eq('id', id)
+            .eq('user_id', userId)
+            .single();
+
+        if (!error && data) {
+            // Guardar en cache
+            cacheManager.set(cacheKey, data);
+            return data;
+        }
+    } catch (e) {
+        console.error('Error en fallback a Supabase:', e);
+    }
+
+    return null;
+}
+
+/**
+ * Precarga IDs de siniestros en cache individual
+ * Optimización: aprovecha datos ya cargados para evitar queries futuras
+ * Estrategia: Warm Cache Pasivo Post-Render (FASE 4.2)
+ * 
+ * @param {Array<Object>} siniestros - Array de siniestros a precachear
+ * @returns {number} Cantidad de IDs cacheados
+ */
+export function prewarmCacheIds(siniestros) {
+    if (!Array.isArray(siniestros) || siniestros.length === 0) {
+        return 0;
+    }
+
+    let cacheados = 0;
+    
+    try {
+        siniestros.forEach(siniestro => {
+            if (siniestro && siniestro.id) {
+                const cacheKey = `siniestro_id_${siniestro.id}`;
+                // Solo cachear si NO existe ya (respeta TTL)
+                if (!cacheManager.get(cacheKey)) {
+                    cacheManager.set(cacheKey, siniestro);
+                    cacheados++;
+                }
+            }
+        });
+
+    } catch (e) {
+        console.error('Error en prewarmCacheIds:', e);
+    }
+
+    return cacheados;
+}
+
 // ============================================
 // CACHE DE ASEGURADOS
 // ============================================
@@ -78,7 +158,8 @@ export async function actualizarCacheAsegurados() {
     const clienteSupabase = getClienteSupabase();
     const ahora = Date.now();
 
-    // Actualizar cada 5 minutos
+    // FASE 5.2.1: Hit cache si es reciente y no está vacío
+    // TTL: 5 minutos (300000 ms)
     if (ahora - ultimaActualizacionCache < 300000 && cacheAsegurados.length > 0) {
         return cacheAsegurados;
     }
@@ -96,6 +177,10 @@ export async function actualizarCacheAsegurados() {
         if (!error && data) {
             cacheAsegurados = data;
             ultimaActualizacionCache = ahora;
+            
+            // FASE 5.2.1: Invalidar cache de búsquedas cuando la fuente cambia
+            // Esto fuerza recálculo de fuzzy matching en próxima búsqueda
+            cacheManager.invalidate('search_');
         }
     } catch (e) {
         console.error('Error actualizando cache:', e);
@@ -113,8 +198,30 @@ export async function buscarAseguradosFuzzy(query) {
         return [];
     }
 
+    // ============================================
+    // FASE 5.2.1: CACHE HIT - Búsqueda ya calculada
+    // ============================================
+    const userId = await getUserId();
+    if (!userId) return [];
+    
+    const cacheKey = `search_${normalizarQueryBusqueda(query)}_${userId}`;
+    const cached = cacheManager.get(cacheKey);
+    if (cached) {
+        return cached;
+    }
+
+    // ============================================
+    // FASE 5.2.1: CACHE MISS - Calcular búsqueda
+    // ============================================
     const asegurados = await actualizarCacheAsegurados();
-    return busquedaFuzzy(query, asegurados, 'asegurado', 0.35);
+    const resultados = busquedaFuzzy(query, asegurados, 'asegurado', 0.35);
+    
+    // ============================================
+    // FASE 5.2.1: CACHE SET - Guardar para próxima consulta
+    // ============================================
+    cacheManager.set(cacheKey, resultados);
+
+    return resultados;
 }
 
 // Búsqueda fuzzy cuando no hay resultados exactos
@@ -159,11 +266,22 @@ function generarClaveCacheSiniestros(userId, pagina, orden, filtros) {
 }
 
 /**
- * Invalida el cache de siniestros
+ * FASE 5.2.1: Invalida el cache de siniestros
  * Se llama cuando hay cambios (crear, editar, eliminar)
  */
 function invalidarCacheSiniestros() {
     cacheManager.invalidate('siniestros_');
+}
+
+/**
+ * FASE 5.2.1: Invalida explícitamente el cache de asegurados
+ * Se llama cuando la fuente de datos cambia (edición de asegurado, eliminación)
+ * Esto fuerza recalculo de búsquedas fuzzy en próxima consulta
+ */
+function invalidarCacheAsegurados() {
+    ultimaActualizacionCache = 0;  // Fuerza recarga en próxima llamada
+    cacheAsegurados = [];           // Limpia cache local
+    cacheManager.invalidate('search_'); // Invalida resultados de búsqueda
 }
 
 /**
@@ -396,8 +514,9 @@ export async function crearSiniestro(datos) {
 
         if (error) throw error;
 
-        // Invalidar cache después de crear
-        invalidarCacheSiniestros();
+        // FASE 5.2.1: Invalidar caches después de crear
+        invalidarCacheSiniestros();                // Cache de listados
+        invalidarCacheAsegurados();                // Cache de búsquedas (nuevo asegurado)
 
         console.log('✅ Siniestro creado:', data[0]);
         return { success: true, data: data[0] };
@@ -447,8 +566,13 @@ export async function actualizarSiniestro(id, datos) {
 
         if (error) throw error;
 
-        // Invalidar cache después de actualizar
-        invalidarCacheSiniestros();
+        // FASE 5.2.1: Invalidar caches después de actualizar
+        invalidarCacheSiniestros();                    // Cache de listados
+        // Si cambió el nombre del asegurado, invalidar búsquedas fuzzy
+        if (data && data[0] && data[0].asegurado !== datosActualizados.asegurado) {
+            invalidarCacheAsegurados();
+        }
+        cacheManager.invalidate(`siniestro_id_${id}`); // Cache individual
 
         console.log('✅ Siniestro actualizado:', data[0]);
         return { success: true, data: data[0] };
@@ -482,8 +606,10 @@ export async function eliminarSiniestro(id) {
 
         if (error) throw error;
 
-        // Invalidar cache después de eliminar
-        invalidarCacheSiniestros();
+        // FASE 5.2.1: Invalidar caches después de eliminar
+        invalidarCacheSiniestros();        // Cache de listados
+        invalidarCacheAsegurados();        // Cache de búsquedas (reduce lista de asegurados)
+        cacheManager.invalidate(`siniestro_id_${id}`); // Cache individual
 
         console.log('✅ Siniestro eliminado');
         return { success: true };

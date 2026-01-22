@@ -961,6 +961,29 @@
                 justify-content: flex-start;
             }
         }
+
+        /* FASE 5.3: Estados visuales de búsqueda */
+        
+        /* Estado: Buscando (búsqueda en progreso) */
+        #buscarAsegurado.searching {
+            border-color: var(--primary);
+            box-shadow: 0 0 8px rgba(0, 86, 179, 0.4);
+            background-color: #f0f6ff;
+        }
+
+        /* Badge rotando durante búsqueda */
+        .fuzzy-badge.rotating {
+            animation: spinRotate 1s linear infinite;
+        }
+
+        @keyframes spinRotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body>
@@ -1019,13 +1042,11 @@
                 <div class="search-bar">
                     <div style="position: relative; flex: 1; min-width: 200px;">
                         <input type="text" id="buscarAsegurado" placeholder="🔍 Buscar por asegurado..."
-                               onkeyup="filtrarTablaDebounced(); busquedaInteligenteDebounced(this);"
-                               onfocus="busquedaInteligenteDebounced(this);"
                                autocomplete="off"
                                style="width: 100%;">
                         <span class="fuzzy-badge" title="Búsqueda inteligente activa: tolera errores tipográficos y encuentra nombres similares">✨</span>
                     </div>
-                    <input type="text" id="buscarSiniestro" placeholder="🔍 Buscar por número de siniestro..." onkeyup="filtrarTablaDebounced()">
+                    <input type="text" id="buscarSiniestro" placeholder="🔍 Buscar por número de siniestro...">
                     <select id="filtroEstado" onchange="filtrarTabla()">
                         <option value="">Todos los estados</option>
                         <option value="pendiente">Pendiente</option>
@@ -1034,7 +1055,7 @@
                         <option value="taller">Liquidado</option>
                         <option value="rechazado">Rechazado</option>
                     </select>
-                    <button class="btn btn-primary" onclick="cargarSiniestros(0, false)">🔄 Actualizar</button>
+                    <button id="btnActualizar" class="btn btn-primary">🔄 Actualizar</button>
                 </div>
 
                 <div class="loading" id="loadingLista">

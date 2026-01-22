@@ -30,7 +30,8 @@ import {
 import {
     handleFiltrarTabla,
     handleOrdenarPor,
-    configurarListenerBusqueda
+    configurarListenerBusqueda,
+    configurarListenerResetFiltros
 } from './handlers/filtros.handlers.js';
 
 // Handlers de mensajes WhatsApp
@@ -106,6 +107,7 @@ async function inicializarApp() {
     configurarListenersMensajes();
     configurarListenerTelefono();
     configurarListenerBusqueda();
+    configurarListenerResetFiltros();
 
     console.log('✅ Aplicación lista');
 }
@@ -141,7 +143,6 @@ window.abrirWhatsApp = handleAbrirWhatsApp;
 window.generarReporte = handleGenerarReporte;
 window.exportarExcel = handleExportarExcel;
 window.crearUsuario = handleCrearUsuario;
-window.cargarSiniestros = handleCargarSiniestros;
 window.cambiarTabDirecto = cambiarTabDirecto;
 
 // ============================================

@@ -13,17 +13,21 @@ import {
 import {
     getSiniestroByAsegurado,
     getSiniestroById,
+    getSiniestroByIdWithFallback,
     generarMensaje,
     generarUrlWhatsApp
 } from '../siniestros.js';
 
 export function handleEnviarMensaje(id) {
-    const siniestro = getSiniestroById(id);
-    if (!siniestro) return;
+    // Usar IIFE async para mantener handler sincrónico hacia UI
+    (async () => {
+        const siniestro = await getSiniestroByIdWithFallback(id);
+        if (!siniestro) return;
 
-    llenarFormularioMensaje(siniestro);
-    cambiarTabDirecto('mensajes');
-    handleActualizarPlantilla();
+        llenarFormularioMensaje(siniestro);
+        cambiarTabDirecto('mensajes');
+        handleActualizarPlantilla();
+    })();
 }
 
 export function handleActualizarPlantilla() {

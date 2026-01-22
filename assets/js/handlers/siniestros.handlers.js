@@ -28,7 +28,9 @@ import {
     crearSiniestro,
     actualizarSiniestro,
     eliminarSiniestro as eliminarSiniestroService,
-    getSiniestroById
+    getSiniestroById,
+    getSiniestroByIdWithFallback,
+    prewarmCacheIds
 } from '../siniestros.js';
 import { handleEnviarMensaje } from './mensajes.handlers.js';
 
@@ -51,6 +53,9 @@ export async function handleCargarSiniestros(pagina = 0, aplicarFiltros = false)
         onEnviarMensaje: handleEnviarMensaje,
         onEliminar: handleEliminarSiniestro
     });
+
+    // 🔥 FASE 4.2: Warm cache pasivo - precachear IDs visibles
+    prewarmCacheIds(resultado.data);
 
     // Actualizar estadísticas
     actualizarEstadisticas(resultado.data);
@@ -102,11 +107,14 @@ export async function handleAgregarSiniestro(event) {
 }
 
 export function handleEditarSiniestro(id) {
-    const siniestro = getSiniestroById(id);
-    if (!siniestro) return;
+    // Usar IIFE async para mantener handler sincrónico hacia UI
+    (async () => {
+        const siniestro = await getSiniestroByIdWithFallback(id);
+        if (!siniestro) return;
 
-    llenarFormularioEdicion(siniestro);
-    abrirModal();
+        llenarFormularioEdicion(siniestro);
+        abrirModal();
+    })();
 }
 
 export async function handleGuardarEdicion(event) {

@@ -341,6 +341,95 @@ function cerrarSugerenciasClick(e) {
 }
 
 // ============================================
+// HELPERS DE SEGURIDAD (XSS Prevention)
+// ============================================
+
+/**
+ * Escapa caracteres HTML para prevenir XSS
+ * FASE 5.3: Seguridad en mostrarMensajeSinResultados
+ * 
+ * @param {string} text - Texto a escapar
+ * @returns {string} Texto con HTML escapado
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Muestra mensaje de sin resultados usando dropdown existente
+ * FASE 5.2.2: Feedback visual cuando no hay coincidencias
+ * 
+ * @param {HTMLElement} input - Input de búsqueda
+ * @param {string} query - Query sin resultados
+ * @param {string} tipo - Tipo de búsqueda ('asegurado' | 'numero')
+ */
+export function mostrarMensajeSinResultados(input, query, tipo = 'asegurado') {
+    // ✅ AJUSTE 1: Remover searching ANTES de aplicar no-results
+    // Evita estados superpuestos en escenarios de error
+    input.classList.remove('searching');
+    input.classList.add('no-results');
+    
+    ocultarSugerencias();  // Limpiar dropdown anterior
+
+    const rect = input.getBoundingClientRect();
+    const container = document.createElement('div');
+    container.className = 'sugerencias-dropdown';
+    container.style.cssText = `
+        position: fixed;
+        top: ${rect.bottom + 5}px;
+        left: ${rect.left}px;
+        width: ${rect.width}px;
+        min-height: 80px;
+        background: white;
+        border: 1px solid #dc3545;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+    `;
+
+    // ✅ AJUSTE 2: Mensajes diferenciados por tipo de búsqueda
+    let titulo = 'No se encontraron resultados';
+    let sugerencia = 'Intenta con otro nombre o revisa la ortografía';
+
+    if (tipo === 'numero') {
+        titulo = 'No hay siniestros con ese número';
+        sugerencia = 'Verifica que el número sea correcto';
+    } else if (tipo === 'asegurado') {
+        sugerencia = 'Intenta con otro nombre o menos caracteres';
+    }
+
+    // Mensaje de sin resultados
+    const mensajeDiv = document.createElement('div');
+    mensajeDiv.style.cssText = `
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        width: 100%;
+    `;
+    mensajeDiv.innerHTML = `
+        <div style="margin-bottom: 8px; font-size: 20px;">🔍</div>
+        <div><strong>${titulo}</strong></div>
+        <div style="font-size: 12px; color: #999; margin-top: 5px;">${sugerencia}</div>
+    `;
+
+    container.appendChild(mensajeDiv);
+    document.body.appendChild(container);
+    sugerenciasActivas = container;
+
+    // Cerrar al hacer click fuera
+    setTimeout(() => {
+        document.addEventListener('click', cerrarSugerenciasClick);
+    }, 100);
+}
+
+// ============================================
 // ALERTA FUZZY SEARCH
 // ============================================
 
