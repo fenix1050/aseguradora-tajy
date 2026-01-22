@@ -1,4 +1,4 @@
-# 🛡️ Sistema de Gestión de Siniestros - Aseguradora Tajy
+# 🛡️ Sistema de Gestión de Siniestros - Aseguradoras
 
 Sistema completo de gestión de siniestros con backend en Supabase (PostgreSQL) y frontend en HTML/JavaScript vanilla.
 
