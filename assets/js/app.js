@@ -23,7 +23,8 @@ import {
     handleAgregarSiniestro,
     handleEditarSiniestro,
     handleGuardarEdicion,
-    handleEliminarSiniestro
+    handleEliminarSiniestro,
+    configurarValidacionesFormularioNuevo
 } from './handlers/siniestros.handlers.js';
 
 // Handlers de filtrado y búsqueda
@@ -74,7 +75,7 @@ async function inicializarApp() {
 
     // Configurar event listeners para tabs
     document.querySelectorAll('.tab-button').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             const tabId = this.getAttribute('data-tab');
             cambiarTabDirecto(tabId);
         });
@@ -111,6 +112,9 @@ async function inicializarApp() {
 
     // Cargar siniestros iniciales
     await handleCargarSiniestros(0, false);
+
+    // Configurar validaciones formulario nuevo
+    configurarValidacionesFormularioNuevo();
 
     // Inicializar plantilla de mensajes
     handleActualizarPlantilla();

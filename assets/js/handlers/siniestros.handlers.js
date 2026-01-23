@@ -148,3 +148,30 @@ export async function handleEliminarSiniestro(id) {
     mostrarAlerta('success', '✅ Siniestro eliminado exitosamente');
     await handleCargarSiniestros();
 }
+
+export function configurarValidacionesFormularioNuevo() {
+    const numInput = document.getElementById('numeroNuevo');
+    const asegInput = document.getElementById('aseguradoNuevo');
+    const telInput = document.getElementById('telefonoNuevo');
+
+    if (numInput && !numInput.dataset.validacionInit) {
+        numInput.addEventListener('blur', () =>
+            validarCampo('numero', numInput.value, numInput)
+        );
+        numInput.dataset.validacionInit = 'true';
+    }
+
+    if (asegInput && !asegInput.dataset.validacionInit) {
+        asegInput.addEventListener('blur', () =>
+            validarCampo('asegurado', asegInput.value, asegInput)
+        );
+        asegInput.dataset.validacionInit = 'true';
+    }
+
+    if (telInput && !telInput.dataset.validacionInit) {
+        telInput.addEventListener('blur', () =>
+            validarCampo('telefono', telInput.value, telInput)
+        );
+        telInput.dataset.validacionInit = 'true';
+    }
+}
