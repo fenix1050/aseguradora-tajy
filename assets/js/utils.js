@@ -362,10 +362,57 @@ export function obtenerSiniestrosPendientesSeguimiento(listaSiniestros) {
 // HELPERS DE UI
 // ============================================
 
+/**
+ * Escapa caracteres HTML para prevenir XSS
+ * @param {string} text - Texto a escapar
+ * @returns {string} Texto con HTML escapado
+ */
+export function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+}
+
+/**
+ * Escapa campo CSV para prevenir CSV Injection
+ * @param {string} field - Campo a escapar
+ * @returns {string} Campo seguro para CSV
+ */
+export function escapeCsv(field) {
+    if (field === null || field === undefined) return '';
+    let text = String(field);
+
+    // Prevenir CSV injection: si empieza con =, +, -, @, |, % agregar comilla simple
+    if (/^[=+\-@|%]/.test(text)) {
+        text = "'" + text;
+    }
+
+    // Escapar comillas dobles duplicándolas
+    text = text.replace(/"/g, '""');
+
+    return text;
+}
+
+/**
+ * Resalta coincidencias de búsqueda en texto
+ * FIX XSS: Escapa el texto antes de aplicar resaltado
+ * @param {string} texto - Texto donde buscar
+ * @param {string} busqueda - Término de búsqueda
+ * @returns {string} HTML seguro con coincidencias resaltadas
+ */
 export function resaltarCoincidencia(texto, busqueda) {
-    if (!busqueda) return texto;
-    const regex = new RegExp(`(${busqueda.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return texto.replace(regex, '<strong style="color: #0056b3;">$1</strong>');
+    if (!busqueda) return escapeHtml(texto);
+
+    // Escapar todo el texto primero para prevenir XSS
+    const textoEscapado = escapeHtml(texto);
+    const busquedaEscapada = escapeHtml(busqueda);
+
+    // Crear regex escapando caracteres especiales
+    const regex = new RegExp(`(${busquedaEscapada.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+
+    // Resaltar coincidencias en el texto ya escapado
+    return textoEscapado.replace(regex, '<strong style="color: #0056b3;">$1</strong>');
 }
 
 export function obtenerTextoEstado(estado) {

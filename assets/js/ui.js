@@ -2,7 +2,7 @@
 // UI.JS - DOM, Tabs, Modales, Alertas, Tablas
 // ============================================
 
-import { resaltarCoincidencia, obtenerTextoEstado, formatearFecha } from './utils.js';
+import { resaltarCoincidencia, obtenerTextoEstado, formatearFecha, escapeHtml } from './utils.js';
 
 // ============================================
 // ESTADO DE UI
@@ -63,9 +63,10 @@ export function mostrarAlerta(tipo, mensaje, duracion = 5000) {
         warning: '⚠️'
     }[tipo] || 'ℹ️';
 
+    // FIX XSS: Escapar mensaje antes de insertar en innerHTML
     toast.innerHTML = `
         <span style="font-size: 1.2em;">${icon}</span>
-        <span style="flex: 1;">${mensaje}</span>
+        <span style="flex: 1;">${escapeHtml(mensaje)}</span>
         <span class="toast-close" onclick="this.parentElement.remove()">&times;</span>
     `;
 
@@ -345,20 +346,8 @@ function cerrarSugerenciasClick(e) {
 // ============================================
 
 /**
- * Escapa caracteres HTML para prevenir XSS
- * FASE 5.3: Seguridad en mostrarMensajeSinResultados
- * 
- * @param {string} text - Texto a escapar
- * @returns {string} Texto con HTML escapado
- */
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-/**
  * Muestra mensaje de sin resultados usando dropdown existente
+ * NOTA: escapeHtml() ahora se importa desde utils.js
  * FASE 5.2.2: Feedback visual cuando no hay coincidencias
  * 
  * @param {HTMLElement} input - Input de búsqueda
@@ -439,8 +428,9 @@ export function mostrarAlertaFuzzy(busqueda, cantidadResultados) {
 
     const alerta = document.createElement('div');
     alerta.className = 'fuzzy-alert';
+    // FIX XSS: Escapar búsqueda antes de insertar en innerHTML
     alerta.innerHTML = `
-        <span>✨ No se encontró "<strong>${busqueda}</strong>" exactamente, pero encontramos ${cantidadResultados} resultado(s) similar(es)</span>
+        <span>✨ No se encontró "<strong>${escapeHtml(busqueda)}</strong>" exactamente, pero encontramos ${cantidadResultados} resultado(s) similar(es)</span>
         <button onclick="this.parentElement.remove()" style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 0 5px;">×</button>
     `;
     alerta.style.cssText = `
@@ -517,19 +507,21 @@ export function actualizarTabla(siniestros, callbacks) {
             tr.style.borderLeft = '4px solid #dc3545';
         }
 
-        // Construir iconos de alerta
+        // Construir iconos de alerta (HTML controlado por nosotros, no del usuario)
         let iconosAlerta = '';
         if (esSiniestroTotal) iconosAlerta += ' ⚠️';
         if (necesitaSeguimiento) {
-            iconosAlerta += ` <span class="alerta-seguimiento" title="Requiere seguimiento - ${diasTranscurridos} días sin actualización">⏰</span>`;
+            // Escapar diasTranscurridos en el atributo title por seguridad
+            iconosAlerta += ` <span class="alerta-seguimiento" title="Requiere seguimiento - ${escapeHtml(String(diasTranscurridos))} días sin actualización">⏰</span>`;
         }
 
+        // FIX XSS: Escapar todos los datos del usuario antes de insertar en innerHTML
         tr.innerHTML = `
-            <td><strong>${s.numero}</strong>${iconosAlerta}</td>
-            <td>${s.asegurado}</td>
-            <td>${s.telefono}</td>
-            <td>${formatearFecha(s.fecha)}</td>
-            <td><span class="badge ${estadoBadge}">${obtenerTextoEstado(s.estado)}</span></td>
+            <td><strong>${escapeHtml(s.numero)}</strong>${iconosAlerta}</td>
+            <td>${escapeHtml(s.asegurado)}</td>
+            <td>${escapeHtml(s.telefono)}</td>
+            <td>${escapeHtml(formatearFecha(s.fecha))}</td>
+            <td><span class="badge ${estadoBadge}">${escapeHtml(obtenerTextoEstado(s.estado))}</span></td>
             <td><strong>${esSiniestroTotal ? 'SINIESTRO TOTAL' : 'Normal'}</strong></td>
             <td>
                 <div class="action-buttons">

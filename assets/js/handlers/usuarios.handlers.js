@@ -4,7 +4,7 @@
 
 import { getUsuarioActual } from '../auth.js';
 import { mostrarAlerta, mostrarCargando } from '../ui.js';
-import { formatearFecha } from '../utils.js';
+import { formatearFecha, escapeHtml } from '../utils.js';
 import {
     cargarUsuarios as cargarUsuariosService,
     crearUsuario as crearUsuarioService,
@@ -58,14 +58,15 @@ export function actualizarTablaUsuarios(usuarios) {
             '<button class="btn btn-danger btn-small" disabled title="No puedes eliminarte a ti mismo">🗑️</button>' :
             `<button class="btn btn-danger btn-small btn-eliminar-usuario" data-id="${usuario.id}" title="Eliminar usuario">🗑️</button>`;
 
+        // FIX XSS: Escapar datos del usuario antes de insertar en innerHTML
         tr.innerHTML = `
-            <td><strong>${usuario.nombre_completo}</strong></td>
-            <td>${usuario.email}</td>
+            <td><strong>${escapeHtml(usuario.nombre_completo)}</strong></td>
+            <td>${escapeHtml(usuario.email)}</td>
             <td>${rolBadge}</td>
-            <td>${formatearFecha(usuario.created_at)}</td>
+            <td>${escapeHtml(formatearFecha(usuario.created_at))}</td>
             <td>
                 <div class="action-buttons">
-                    <button class="btn btn-info btn-small btn-cambiar-rol" data-id="${usuario.id}" data-rol="${usuario.rol}" title="Cambiar rol">🔄</button>
+                    <button class="btn btn-info btn-small btn-cambiar-rol" data-id="${usuario.id}" data-rol="${escapeHtml(usuario.rol)}" title="Cambiar rol">🔄</button>
                     ${botonEliminar}
                 </div>
             </td>

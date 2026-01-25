@@ -18,6 +18,8 @@ import {
     calcularDiasTranscurridos,
     requiereSeguimiento,
     formatearFecha,
+    escapeHtml,
+    escapeCsv,
     DIAS_ALERTA_SEGUIMIENTO,
     LIMITE_POR_PAGINA
 } from './utils.js';
@@ -764,9 +766,9 @@ export function generarHtmlReporte(reporteSiniestros, fechaDesde, fechaHasta) {
         <body>
             <h2>📊 Reporte de Siniestros - Aseguradora Tajy</h2>
             <div class="info">
-                <p><strong>Período:</strong> ${formatearFecha(fechaDesde)} - ${formatearFecha(fechaHasta)}</p>
+                <p><strong>Período:</strong> ${escapeHtml(formatearFecha(fechaDesde))} - ${escapeHtml(formatearFecha(fechaHasta))}</p>
                 <p><strong>Total de registros:</strong> ${reporteSiniestros.length}</p>
-                <p><strong>Generado:</strong> ${new Date().toLocaleString('es-PY')}</p>
+                <p><strong>Generado:</strong> ${escapeHtml(new Date().toLocaleString('es-PY'))}</p>
             </div>
             <table>
                 <thead>
@@ -783,16 +785,17 @@ export function generarHtmlReporte(reporteSiniestros, fechaDesde, fechaHasta) {
                 <tbody>
     `;
 
+    // FIX XSS: Escapar todos los datos del usuario antes de insertar en HTML
     reporteSiniestros.forEach(s => {
         html += `
             <tr>
-                <td>${s.numero}</td>
-                <td>${s.asegurado}</td>
-                <td>${s.telefono}</td>
-                <td>${formatearFecha(s.fecha)}</td>
-                <td>${s.tipo}</td>
-                <td>${obtenerTextoEstado(s.estado)}</td>
-                <td>${s.monto}</td>
+                <td>${escapeHtml(s.numero)}</td>
+                <td>${escapeHtml(s.asegurado)}</td>
+                <td>${escapeHtml(s.telefono)}</td>
+                <td>${escapeHtml(formatearFecha(s.fecha))}</td>
+                <td>${escapeHtml(s.tipo)}</td>
+                <td>${escapeHtml(obtenerTextoEstado(s.estado))}</td>
+                <td>${escapeHtml(s.monto)}</td>
             </tr>
         `;
     });
@@ -830,8 +833,9 @@ export function generarCsvReporte(reporteSiniestros) {
     let csv = '\uFEFF'; // BOM para UTF-8
     csv += 'Nº Siniestro,Asegurado,Teléfono,Fecha,Tipo,Estado,Monto,Observaciones\n';
 
+    // FIX CSV Injection: Escapar todos los campos para prevenir inyección de fórmulas
     reporteSiniestros.forEach(s => {
-        csv += `"${s.numero}","${s.asegurado}","${s.telefono}","${formatearFecha(s.fecha)}","${s.tipo}","${obtenerTextoEstado(s.estado)}","${s.monto}","${s.observaciones || ''}"\n`;
+        csv += `"${escapeCsv(s.numero)}","${escapeCsv(s.asegurado)}","${escapeCsv(s.telefono)}","${escapeCsv(formatearFecha(s.fecha))}","${escapeCsv(s.tipo)}","${escapeCsv(obtenerTextoEstado(s.estado))}","${escapeCsv(s.monto)}","${escapeCsv(s.observaciones || '')}"\n`;
     });
 
     return csv;
