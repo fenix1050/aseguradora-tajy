@@ -59,6 +59,18 @@ import {
 // Handlers de teléfono
 import { configurarListenerTelefono } from './handlers/telefono.handlers.js';
 
+// Handlers de notificaciones
+import {
+    togglePanelNotificaciones,
+    cerrarPanelNotificaciones,
+    handleCargarNotificaciones,
+    handleMarcarLeida,
+    handleMarcarTodasLeidas,
+    mostrarOpcionesSnooze,
+    handleSnooze,
+    handleSincronizarNotificaciones
+} from './handlers/notificaciones.handlers.js';
+
 // ============================================
 // INICIALIZACIÓN
 // ============================================
@@ -125,7 +137,56 @@ async function inicializarApp() {
     configurarListenerBusqueda();
     configurarListenerResetFiltros();
 
+    // Configurar listeners de notificaciones
+    configurarListenersNotificaciones();
+
+    // Sincronizar y cargar notificaciones iniciales
+    await handleSincronizarNotificaciones();
+    await handleCargarNotificaciones();
+
     console.log('✅ Aplicación lista');
+}
+
+// ============================================
+// CONFIGURAR LISTENERS NOTIFICACIONES
+// ============================================
+
+function configurarListenersNotificaciones() {
+    // Botón de notificaciones (toggle panel)
+    const btnNotificaciones = document.getElementById('btnNotificaciones');
+    if (btnNotificaciones) {
+        btnNotificaciones.addEventListener('click', togglePanelNotificaciones);
+    }
+
+    // Botón de cerrar panel
+    const btnCerrarPanel = document.getElementById('btnCerrarPanel');
+    if (btnCerrarPanel) {
+        btnCerrarPanel.addEventListener('click', cerrarPanelNotificaciones);
+    }
+
+    // Botón de marcar todas como leídas
+    const btnMarcarTodas = document.getElementById('btnMarcarTodasLeidas');
+    if (btnMarcarTodas) {
+        btnMarcarTodas.addEventListener('click', handleMarcarTodasLeidas);
+    }
+
+    // Overlay (cerrar al hacer click fuera)
+    const overlay = document.getElementById('notificacionesOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', cerrarPanelNotificaciones);
+    }
+
+    // Cerrar panel con tecla ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const panel = document.getElementById('panelNotificaciones');
+            if (panel && !panel.classList.contains('oculto')) {
+                cerrarPanelNotificaciones();
+            }
+        }
+    });
+
+    console.log('✅ Listeners de notificaciones configurados');
 }
 
 // ============================================
@@ -160,6 +221,12 @@ window.generarReporte = handleGenerarReporte;
 window.exportarExcel = handleExportarExcel;
 window.crearUsuario = handleCrearUsuario;
 window.cambiarTabDirecto = cambiarTabDirecto;
+
+// Notificaciones
+window.togglePanelNotificaciones = togglePanelNotificaciones;
+window.handleEditarSiniestro = handleEditarSiniestro;
+window.handleEnviarMensaje = handleEnviarMensaje;
+window.mostrarOpcionesSnooze = mostrarOpcionesSnooze;
 
 // ============================================
 // INICIO

@@ -1516,6 +1516,411 @@
         #modalEditar .btn-primary:active {
             transform: translateY(0);
         }
+
+        /* ============================================ */
+        /* SISTEMA DE NOTIFICACIONES */
+        /* ============================================ */
+
+        /* Badge de notificaciones */
+        .btn-notificaciones {
+            position: relative;
+            background: white;
+            color: var(--tajy-red);
+            border: 2px solid var(--tajy-red);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-notificaciones:hover {
+            background: var(--tajy-red);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(196, 22, 28, 0.3);
+        }
+
+        .badge-contador {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--tajy-red);
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 0.7em;
+            font-weight: 700;
+            min-width: 20px;
+            height: 20px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Panel de notificaciones */
+        #panelNotificaciones {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 450px;
+            max-width: 90vw;
+            height: 100vh;
+            background: white;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease-out;
+        }
+
+        #panelNotificaciones.oculto {
+            transform: translateX(100%);
+        }
+
+        /* Header del panel */
+        .notificacion-header-panel {
+            background: linear-gradient(135deg, var(--tajy-red) 0%, #b8151a 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .notificacion-header-panel h3 {
+            margin: 0;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-cerrar-panel {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-cerrar-panel:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .notificacion-acciones-header {
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-marcar-todas {
+            background: none;
+            border: none;
+            color: var(--tajy-red);
+            font-size: 0.9em;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-marcar-todas:hover {
+            background: rgba(196, 22, 28, 0.1);
+            text-decoration: underline;
+        }
+
+        /* Lista de notificaciones */
+        .lista-notificaciones {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        /* Notificación individual */
+        .notificacion {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .notificacion:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .notificacion.no-leida {
+            background: #fffbf5;
+            border-color: var(--tajy-red);
+        }
+
+        .notificacion.leida {
+            opacity: 0.7;
+        }
+
+        .notificacion.urgente {
+            background: #ffe6e6;
+        }
+
+        .notificacion.importante {
+            background: #ffe6cc;
+        }
+
+        .notificacion.atencion {
+            background: #fff3cd;
+        }
+
+        .notif-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 0.85em;
+        }
+
+        .notif-icono {
+            font-size: 1.2em;
+        }
+
+        .notif-nivel {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .notif-tiempo {
+            margin-left: auto;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .notif-contenido {
+            margin-bottom: 10px;
+        }
+
+        .notif-contenido strong {
+            display: block;
+            color: var(--tajy-red);
+            margin-bottom: 4px;
+            font-size: 1.05em;
+        }
+
+        .notif-contenido p {
+            margin: 4px 0;
+            color: #333;
+        }
+
+        .notif-detalle {
+            font-size: 0.85em;
+            color: #666;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .notif-acciones {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .notif-acciones .btn-icono {
+            font-size: 0.85em;
+            padding: 4px 10px;
+            background: white;
+            border: 1px solid #ddd;
+            color: #333;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .notif-acciones .btn-icono:hover {
+            background: #f0f0f0;
+            border-color: #bbb;
+            transform: translateY(-1px);
+        }
+
+        .notif-acciones .btn-marcar-leida {
+            background: var(--tajy-red);
+            color: white;
+            border-color: var(--tajy-red);
+            width: 32px;
+            padding: 4px 8px;
+        }
+
+        .notif-acciones .btn-marcar-leida:hover {
+            background: #b8151a;
+        }
+
+        /* Sin notificaciones */
+        .sin-notificaciones {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .sin-notificaciones .icono-grande {
+            font-size: 4em;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        /* Menú de snooze */
+        .snooze-menu {
+            background: white;
+            border: 2px solid var(--tajy-red);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 12px rgba(196, 22, 28, 0.2);
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideOut {
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+
+        .snooze-menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .snooze-menu-header strong {
+            color: var(--tajy-red);
+        }
+
+        .btn-cerrar-snooze {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #999;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .btn-cerrar-snooze:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .snooze-opciones {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .snooze-opcion {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95em;
+        }
+
+        .snooze-opcion:hover {
+            background: #f8f9fa;
+            border-color: var(--tajy-red);
+            transform: translateX(4px);
+        }
+
+        .snooze-opcion span:first-child {
+            font-size: 1.3em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #panelNotificaciones {
+                width: 100vw;
+            }
+
+            .notificacion {
+                padding: 10px;
+            }
+
+            .notif-acciones {
+                flex-direction: column;
+            }
+
+            .notif-acciones .btn-icono {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Overlay para cerrar panel */
+        .notificaciones-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            display: none;
+        }
+
+        .notificaciones-overlay.visible {
+            display: block;
+        }
     </style>
 </head>
 
@@ -1536,6 +1941,10 @@
                 <div id="connectionStatus" class="connection-status status-disconnected">
                     🔴 No conectado
                 </div>
+                <button class="btn-notificaciones" id="btnNotificaciones" title="Notificaciones de seguimiento">
+                    🔔
+                    <span class="badge-contador" id="badgeContadorNotif">0</span>
+                </button>
                 <button class="logout-btn" onclick="cerrarSesion()" title="Cerrar sesión">🚪 Salir</button>
             </div>
         </div>
@@ -1890,6 +2299,30 @@
             </form>
         </div>
     </div>
+
+    <!-- Panel de Notificaciones -->
+    <div id="panelNotificaciones" class="oculto">
+        <div class="notificacion-header-panel">
+            <h3>
+                🔔 Notificaciones
+            </h3>
+            <button class="btn-cerrar-panel" id="btnCerrarPanel">×</button>
+        </div>
+
+        <div class="notificacion-acciones-header">
+            <span id="textoContadorNotif">Cargando...</span>
+            <button class="btn-marcar-todas" id="btnMarcarTodasLeidas">
+                ✓ Marcar todas como leídas
+            </button>
+        </div>
+
+        <div class="lista-notificaciones" id="listaNotificaciones">
+            <!-- Notificaciones se cargan dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Overlay para cerrar panel al hacer click fuera -->
+    <div class="notificaciones-overlay" id="notificacionesOverlay"></div>
 
     <script src="config.js"></script>
     <script type="module" src="assets/js/app.js"></script>
