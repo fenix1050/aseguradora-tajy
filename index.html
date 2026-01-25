@@ -1177,6 +1177,87 @@
             font-size: 0.9em;
             transition: all 0.2s;
         }
+
+        /* ========================================= */
+        /* FORMULARIO NUEVO SINIESTRO - ESTILO      */
+        /* ========================================= */
+
+        #formNuevoSiniestro .form-group label {
+            color: #1e3a5f;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+        }
+
+        #formNuevoSiniestro .required-asterisk {
+            color: #dc3545;
+            margin-left: 2px;
+        }
+
+        #formNuevoSiniestro input:not([type="checkbox"]):not([type="radio"]),
+        #formNuevoSiniestro select,
+        #formNuevoSiniestro textarea {
+            background-color: #f5f7fa;
+            border: 1px solid #e8ebef;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 0.95em;
+            color: #333;
+            transition: all 0.2s ease;
+        }
+
+        #formNuevoSiniestro input:not([type="checkbox"]):not([type="radio"])::placeholder,
+        #formNuevoSiniestro select::placeholder {
+            color: #9ca3af;
+        }
+
+        #formNuevoSiniestro input:not([type="checkbox"]):not([type="radio"]):focus,
+        #formNuevoSiniestro select:focus,
+        #formNuevoSiniestro textarea:focus {
+            outline: none;
+            border-color: #0056b3;
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+        }
+
+        #formNuevoSiniestro .form-row-3cols {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 768px) {
+            #formNuevoSiniestro .form-row-3cols {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        #formNuevoSiniestro .btn-guardar-siniestro {
+            background-color: #8b1538;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 1em;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+        }
+
+        #formNuevoSiniestro .btn-guardar-siniestro:hover {
+            background-color: #6d1029;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(139, 21, 56, 0.3);
+        }
+
+        #formNuevoSiniestro .btn-guardar-siniestro:active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 
@@ -1299,62 +1380,46 @@
                         <!-- Fila 1: Nº Siniestro y Nombre -->
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="numeroSiniestro">Nº de Siniestro *</label>
+                                <label for="numeroSiniestro">Nº de Siniestro<span class="required-asterisk">*</span></label>
                                 <input type="text" name="numero" id="numeroSiniestro" required placeholder="Ej: 226500">
                             </div>
                             <div class="form-group">
-                                <label for="aseguradoSiniestro">Nombre del Asegurado *</label>
+                                <label for="aseguradoSiniestro">Nombre del Asegurado<span class="required-asterisk">*</span></label>
                                 <input type="text" name="asegurado" id="aseguradoSiniestro" required>
                             </div>
                         </div>
 
-                        <!-- Fila 2: Teléfono y Sexo -->
-                        <div class="form-row">
+                        <!-- Fila 2: Sexo, Teléfono y Siniestro Total -->
+                        <div class="form-row-3cols">
                             <div class="form-group">
-                                <label for="telefonoSiniestro">Teléfono (WhatsApp) *</label>
-                                <input type="tel" name="telefono" id="telefonoSiniestro" required placeholder="+595"
-                                    value="+595">
+                                <label for="sexoSiniestro">Sexo del Asegurado</label>
+                                <select name="sexo" id="sexoSiniestro">
+                                    <option value="">No especificado</option>
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Femenino</option>
+                                </select>
                             </div>
                             <div class="form-group">
-                                <label>Sexo del Asegurado</label>
-                                <div class="radio-group">
-                                    <div class="radio-option">
-                                        <input type="radio" name="sexo" id="sexoM" value="M">
-                                        <label for="sexoM">Masculino</label>
-                                    </div>
-                                    <div class="radio-option">
-                                        <input type="radio" name="sexo" id="sexoF" value="F">
-                                        <label for="sexoF">Femenino</label>
-                                    </div>
-                                </div>
+                                <label for="telefonoSiniestro">Teléfono (WhatsApp)<span class="required-asterisk">*</span></label>
+                                <input type="tel" name="telefono" id="telefonoSiniestro" required placeholder="+595" value="+595">
+                            </div>
+                            <div class="form-group">
+                                <label for="siniestroTotal">¿Siniestro Total?<span class="required-asterisk">*</span></label>
+                                <select name="siniestro_total" id="siniestroTotal" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="No">No</option>
+                                    <option value="Sí">Sí</option>
+                                </select>
                             </div>
                         </div>
 
-                        <!-- Fila 3: Siniestro Total (Bloque Destacado) -->
-                        <div class="critical-decision-block">
-                            <div class="critical-decision-header">
-                                <span class="critical-decision-icon">⚠️</span>
-                                <span class="critical-decision-label">Siniestro Total</span>
-                            </div>
-                            <p class="critical-decision-description">
-                                ¿Este siniestro representa una pérdida total del vehículo?
-                            </p>
-                            <label class="critical-toggle-wrapper">
-                                <div class="critical-toggle-switch">
-                                    <input type="checkbox" name="siniestro_total" id="siniestroTotal" value="Sí">
-                                    <span class="critical-slider"></span>
-                                </div>
-                                <span class="critical-toggle-text">Declarar como Siniestro Total</span>
-                            </label>
-                        </div>
-
-                        <!-- Fila 4: Observaciones -->
+                        <!-- Fila 3: Observaciones -->
                         <div class="form-group">
                             <label for="observacionesNuevo">Observaciones</label>
                             <textarea name="observaciones" id="observacionesNuevo" rows="3"></textarea>
                         </div>
 
-                        <button type="submit" class="btn btn-primary" id="btnGuardar">💾 Guardar Siniestro</button>
+                        <button type="submit" class="btn-guardar-siniestro" id="btnGuardar">💾 Guardar Siniestro</button>
                     </div>
                 </form>
             </div>
