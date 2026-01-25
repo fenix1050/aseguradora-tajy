@@ -1220,16 +1220,34 @@
             box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
         }
 
-        #formNuevoSiniestro .form-row-3cols {
+        /* Fila 1: Nº Siniestro + Nombre (alineado con fila 2) */
+        #formNuevoSiniestro .form-row {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: 150px 346px;
             gap: 16px;
             margin-bottom: 16px;
         }
 
+        /* Fila 2: Sexo, Teléfono, Siniestro Total (campos pequeños) */
+        #formNuevoSiniestro .form-row-3cols {
+            display: grid;
+            grid-template-columns: 160px 180px 140px;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        /* Observaciones: mismo ancho que filas superiores */
+        #formNuevoSiniestro #observacionesNuevo {
+            width: 512px;
+        }
+
         @media (max-width: 768px) {
+            #formNuevoSiniestro .form-row,
             #formNuevoSiniestro .form-row-3cols {
                 grid-template-columns: 1fr;
+            }
+            #formNuevoSiniestro #observacionesNuevo {
+                width: 100%;
             }
         }
 
