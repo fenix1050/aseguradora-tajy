@@ -2,7 +2,7 @@
 // UI.JS - DOM, Tabs, Modales, Alertas, Tablas
 // ============================================
 
-import { resaltarCoincidencia, obtenerTextoEstado } from './utils.js';
+import { resaltarCoincidencia, obtenerTextoEstado, calcularUrgencia, DIAS_ALERTA_SEGUIMIENTO } from './utils.js';
 
 // ============================================
 // ESTADO DE UI
@@ -505,23 +505,24 @@ export function actualizarTabla(siniestros, callbacks) {
         const diasTranscurridos = s.diasTranscurridos || 0;
         const tr = document.createElement('tr');
 
-        // Aplicar estilo especial si es siniestro total
+        // Calcular urgencia para aplicar estilos diferenciados
+        const urgencia = necesitaSeguimiento ? calcularUrgencia(diasTranscurridos) : null;
+
+        // Aplicar estilo especial si es siniestro total (prioridad máxima)
         if (esSiniestroTotal) {
             tr.style.backgroundColor = '#fff3cd';
             tr.style.borderLeft = '4px solid #ffc107';
         }
-
-        // Aplicar estilo si necesita seguimiento (y no es siniestro total para no sobreescribir)
-        if (necesitaSeguimiento && !esSiniestroTotal) {
-            tr.style.backgroundColor = '#ffe6e6';
-            tr.style.borderLeft = '4px solid #dc3545';
+        // Aplicar estilo basado en nivel de urgencia (si no es siniestro total)
+        else if (necesitaSeguimiento && urgencia) {
+            tr.classList.add(`fila-urgencia-${urgencia.nivel}`);
         }
 
         // Construir iconos de alerta
         let iconosAlerta = '';
         if (esSiniestroTotal) iconosAlerta += ' ⚠️';
-        if (necesitaSeguimiento) {
-            iconosAlerta += ` <span class="alerta-seguimiento" title="Requiere seguimiento - ${diasTranscurridos} días sin actualización">⏰</span>`;
+        if (necesitaSeguimiento && urgencia) {
+            iconosAlerta += ` <span class="alerta-seguimiento" title="${urgencia.texto}: ${diasTranscurridos} días sin actualización">${urgencia.icono}</span>`;
         }
 
         tr.innerHTML = `
@@ -716,4 +717,246 @@ export function leerFiltros() {
         numero: document.getElementById('buscarSiniestro')?.value.trim() || '',
         estado: document.getElementById('filtroEstado')?.value || ''
     };
+}
+
+// ============================================
+// PANEL DE SEGUIMIENTO INTELIGENTE
+// ============================================
+
+// Estado local para persistir "contactado hoy"
+const contactadosHoy = new Map();
+
+// Cargar contactados del localStorage
+function cargarContactadosHoy() {
+    try {
+        const stored = localStorage.getItem('contactadosHoy');
+        if (stored) {
+            const data = JSON.parse(stored);
+            const hoy = new Date().toDateString();
+            // Solo cargar si es del mismo día
+            if (data.fecha === hoy) {
+                data.ids.forEach(id => contactadosHoy.set(id, true));
+            } else {
+                // Limpiar si es de otro día
+                localStorage.removeItem('contactadosHoy');
+            }
+        }
+    } catch (e) {
+        console.warn('Error cargando contactados:', e);
+    }
+}
+
+// Guardar contactados en localStorage
+function guardarContactadosHoy() {
+    try {
+        const data = {
+            fecha: new Date().toDateString(),
+            ids: Array.from(contactadosHoy.keys())
+        };
+        localStorage.setItem('contactadosHoy', JSON.stringify(data));
+    } catch (e) {
+        console.warn('Error guardando contactados:', e);
+    }
+}
+
+// Inicializar al cargar
+cargarContactadosHoy();
+
+/**
+ * Callbacks para acciones del panel
+ */
+let panelCallbacks = {
+    onWhatsApp: null,
+    onContactado: null
+};
+
+/**
+ * Inicializa callbacks del panel de seguimiento
+ */
+export function initPanelSeguimiento(callbacks = {}) {
+    panelCallbacks = {
+        onWhatsApp: callbacks.onWhatsApp || null,
+        onContactado: callbacks.onContactado || null
+    };
+}
+
+/**
+ * Toggle del panel de seguimiento
+ */
+export function togglePanelSeguimiento() {
+    const panel = document.getElementById('panelSeguimiento');
+    if (panel) {
+        panel.classList.toggle('colapsado');
+    }
+}
+
+/**
+ * Marca un siniestro como contactado hoy
+ */
+export function marcarContactado(id) {
+    contactadosHoy.set(id, true);
+    guardarContactadosHoy();
+
+    // Actualizar UI del botón
+    const btn = document.querySelector(`[data-contactado-id="${id}"]`);
+    if (btn) {
+        btn.classList.add('marcado');
+        btn.innerHTML = '✓';
+        btn.title = 'Contactado hoy';
+    }
+
+    mostrarAlerta('success', 'Marcado como contactado', 2000);
+}
+
+/**
+ * Verifica si un siniestro fue contactado hoy
+ */
+export function fueContactadoHoy(id) {
+    return contactadosHoy.has(id);
+}
+
+/**
+ * Renderiza el panel de seguimiento
+ * @param {Array} siniestros - Lista de siniestros que requieren seguimiento
+ */
+export function actualizarPanelSeguimiento(siniestros) {
+    const panel = document.getElementById('panelSeguimiento');
+    const lista = document.getElementById('listaSeguimiento');
+
+    if (!panel || !lista) return;
+
+    // Filtrar siniestros que requieren seguimiento y NO fueron contactados hoy
+    const pendientesSeguimiento = siniestros.filter(s =>
+        s.requiereSeguimiento && !fueContactadoHoy(s.id)
+    );
+
+    // Si no hay pendientes, ocultar panel
+    if (pendientesSeguimiento.length === 0) {
+        panel.style.display = 'none';
+        return;
+    }
+
+    // Mostrar panel
+    panel.style.display = 'block';
+
+    // Calcular urgencias y ordenar por prioridad
+    const conUrgencia = pendientesSeguimiento.map(s => ({
+        ...s,
+        urgencia: calcularUrgencia(s.diasTranscurridos)
+    })).sort((a, b) => b.urgencia.prioridad - a.urgencia.prioridad);
+
+    // Contar por nivel
+    const criticos = conUrgencia.filter(s => s.urgencia.nivel === 'critico').length;
+    const altos = conUrgencia.filter(s => s.urgencia.nivel === 'alto').length;
+    const medios = conUrgencia.filter(s => s.urgencia.nivel === 'medio').length;
+
+    // Actualizar badges
+    actualizarBadgesSeguimiento(criticos, altos, medios, conUrgencia.length);
+
+    // Agregar/quitar clase para críticos
+    if (criticos > 0) {
+        panel.classList.add('tiene-criticos');
+    } else {
+        panel.classList.remove('tiene-criticos');
+    }
+
+    // Renderizar lista
+    lista.innerHTML = '';
+
+    if (conUrgencia.length === 0) {
+        lista.innerHTML = `
+            <li class="panel-seguimiento-vacio">
+                <div class="icono">✅</div>
+                <div class="texto">¡Todos los seguimientos están al día!</div>
+            </li>
+        `;
+        return;
+    }
+
+    conUrgencia.forEach(s => {
+        const li = document.createElement('li');
+        li.className = `panel-seguimiento-item urgencia-${s.urgencia.nivel}`;
+
+        const contactado = fueContactadoHoy(s.id);
+
+        li.innerHTML = `
+            <div class="panel-item-info">
+                <span class="panel-item-icono">${s.urgencia.icono}</span>
+                <div class="panel-item-detalles">
+                    <div class="panel-item-numero">#${s.numero}</div>
+                    <div class="panel-item-asegurado">${s.asegurado}</div>
+                </div>
+                <span class="panel-item-dias">${s.diasTranscurridos} días</span>
+            </div>
+            <div class="panel-item-acciones">
+                <button class="btn-panel-accion btn-panel-whatsapp"
+                        data-whatsapp-id="${s.id}"
+                        title="Enviar WhatsApp de seguimiento">
+                    💬
+                </button>
+                <button class="btn-panel-accion btn-panel-contactado ${contactado ? 'marcado' : ''}"
+                        data-contactado-id="${s.id}"
+                        title="${contactado ? 'Contactado hoy' : 'Marcar como contactado'}">
+                    ${contactado ? '✓' : '📞'}
+                </button>
+            </div>
+        `;
+
+        lista.appendChild(li);
+    });
+
+    // Agregar event listeners
+    lista.querySelectorAll('.btn-panel-whatsapp').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.whatsappId);
+            if (panelCallbacks.onWhatsApp) {
+                panelCallbacks.onWhatsApp(id);
+            }
+        });
+    });
+
+    lista.querySelectorAll('.btn-panel-contactado').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = parseInt(btn.dataset.contactadoId);
+            marcarContactado(id);
+            if (panelCallbacks.onContactado) {
+                panelCallbacks.onContactado(id);
+            }
+        });
+    });
+}
+
+/**
+ * Actualiza los badges de contadores
+ */
+function actualizarBadgesSeguimiento(criticos, altos, medios, total) {
+    const badgeCriticos = document.getElementById('badgeCriticos');
+    const badgeAltos = document.getElementById('badgeAltos');
+    const badgeMedios = document.getElementById('badgeMedios');
+    const badgeTotal = document.getElementById('badgeTotal');
+    const contadorCriticos = document.getElementById('contadorCriticos');
+    const contadorAltos = document.getElementById('contadorAltos');
+    const contadorMedios = document.getElementById('contadorMedios');
+    const contadorTotal = document.getElementById('contadorTotal');
+
+    if (badgeCriticos && contadorCriticos) {
+        badgeCriticos.style.display = criticos > 0 ? 'inline-flex' : 'none';
+        contadorCriticos.textContent = criticos;
+    }
+
+    if (badgeAltos && contadorAltos) {
+        badgeAltos.style.display = altos > 0 ? 'inline-flex' : 'none';
+        contadorAltos.textContent = altos;
+    }
+
+    if (badgeMedios && contadorMedios) {
+        badgeMedios.style.display = medios > 0 ? 'inline-flex' : 'none';
+        contadorMedios.textContent = medios;
+    }
+
+    if (badgeTotal && contadorTotal) {
+        contadorTotal.textContent = total;
+    }
 }

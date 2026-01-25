@@ -14,7 +14,9 @@ import {
     mostrarAlerta,
     cambiarTabDirecto,
     cerrarModal,
-    init as initUI
+    init as initUI,
+    togglePanelSeguimiento,
+    initPanelSeguimiento
 } from './ui.js';
 
 // Handlers de siniestros
@@ -71,6 +73,12 @@ async function inicializarApp() {
         onTabAdmin: handleTabAdmin,
         onCargarSiniestros: handleCargarSiniestros,
         onFiltrarTabla: handleFiltrarTabla
+    });
+
+    // Inicializar panel de seguimiento con callbacks
+    initPanelSeguimiento({
+        onWhatsApp: handleEnviarMensajeSeguimiento,
+        onContactado: (id) => console.log(`✅ Siniestro ${id} marcado como contactado`)
     });
 
     // Configurar event listeners para tabs
@@ -140,6 +148,24 @@ function handleCerrarModalClick(event) {
 }
 
 // ============================================
+// HANDLER DE SEGUIMIENTO (Panel)
+// ============================================
+
+/**
+ * Envía mensaje de seguimiento desde el panel
+ * Preselecciona tipo "seguimiento" automáticamente
+ */
+function handleEnviarMensajeSeguimiento(id) {
+    // Cambiar tipo de mensaje a seguimiento antes de enviar
+    const tipoMensaje = document.getElementById('tipoMensaje');
+    if (tipoMensaje) {
+        tipoMensaje.value = 'seguimiento';
+    }
+    // Usar handler existente
+    handleEnviarMensaje(id);
+}
+
+// ============================================
 // EXPONER FUNCIONES GLOBALES
 // ============================================
 // Necesario para compatibilidad con onclick inline en HTML existente
@@ -160,6 +186,7 @@ window.generarReporte = handleGenerarReporte;
 window.exportarExcel = handleExportarExcel;
 window.crearUsuario = handleCrearUsuario;
 window.cambiarTabDirecto = cambiarTabDirecto;
+window.togglePanelSeguimiento = togglePanelSeguimiento;
 
 // ============================================
 // INICIO

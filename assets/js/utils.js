@@ -341,6 +341,52 @@ export function calcularDiasTranscurridos(fechaSiniestro) {
     return Math.floor(diferencia / (1000 * 60 * 60 * 24));
 }
 
+/**
+ * Calcula el nivel de urgencia basado en días transcurridos
+ * @param {number} diasTranscurridos - Días desde la fecha del siniestro
+ * @returns {Object} { nivel, color, colorFondo, icono, prioridad }
+ */
+export function calcularUrgencia(diasTranscurridos) {
+    if (diasTranscurridos >= 7) {
+        return {
+            nivel: 'critico',
+            color: '#dc3545',
+            colorFondo: '#f8d7da',
+            icono: '🔴',
+            prioridad: 3,
+            texto: 'Crítico'
+        };
+    }
+    if (diasTranscurridos >= 5) {
+        return {
+            nivel: 'alto',
+            color: '#fd7e14',
+            colorFondo: '#fff3cd',
+            icono: '🟠',
+            prioridad: 2,
+            texto: 'Alto'
+        };
+    }
+    if (diasTranscurridos >= DIAS_ALERTA_SEGUIMIENTO) {
+        return {
+            nivel: 'medio',
+            color: '#ffc107',
+            colorFondo: '#fff9e6',
+            icono: '🟡',
+            prioridad: 1,
+            texto: 'Medio'
+        };
+    }
+    return {
+        nivel: 'bajo',
+        color: '#28a745',
+        colorFondo: '#d4edda',
+        icono: '🟢',
+        prioridad: 0,
+        texto: 'Normal'
+    };
+}
+
 // Verificar si un siniestro requiere seguimiento
 export function requiereSeguimiento(siniestro) {
     // Solo alertar siniestros pendientes o en proceso

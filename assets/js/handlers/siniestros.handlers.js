@@ -21,7 +21,8 @@ import {
     resetFormularioNuevo,
     getInputsFormularioNuevo,
     setEstadoBotonGuardar,
-    marcarCampoError
+    marcarCampoError,
+    actualizarPanelSeguimiento
 } from '../ui.js';
 import {
     cargarSiniestros,
@@ -63,14 +64,12 @@ export async function handleCargarSiniestros(pagina = 0, aplicarFiltros = false)
     // Actualizar paginación
     actualizarControlesPaginacion(resultado.paginaActual, resultado.totalRegistros, LIMITE_POR_PAGINA);
 
+    // Actualizar panel de seguimiento inteligente (siempre, para mostrar estado actual)
+    actualizarPanelSeguimiento(resultado.data);
+
     // Mostrar alerta fuzzy si aplica
     if (resultado.fuzzyUsado) {
         mostrarAlertaFuzzy(resultado.fuzzyQuery, resultado.data.length);
-    }
-
-    // Mostrar alerta de seguimiento (solo primera carga)
-    if (pagina === 0 && !aplicarFiltros && resultado.pendientesSeguimiento > 0) {
-        mostrarAlertaSeguimiento(resultado.pendientesSeguimiento, resultado.diasAlerta);
     }
 
     return resultado;

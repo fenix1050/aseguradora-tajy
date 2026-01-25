@@ -1177,6 +1177,308 @@
             font-size: 0.9em;
             transition: all 0.2s;
         }
+
+        /* ========================================= */
+        /* PANEL DE SEGUIMIENTO INTELIGENTE         */
+        /* ========================================= */
+
+        .panel-seguimiento {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border-soft);
+            transition: all 0.3s ease;
+        }
+
+        .panel-seguimiento.tiene-criticos {
+            border-color: #dc3545;
+            box-shadow: 0 4px 20px rgba(220, 53, 69, 0.15);
+        }
+
+        .panel-seguimiento-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .panel-seguimiento-header:hover {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        }
+
+        .panel-seguimiento.tiene-criticos .panel-seguimiento-header {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+        }
+
+        .panel-seguimiento-titulo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-seguimiento-titulo .icono {
+            font-size: 1.3em;
+        }
+
+        .panel-seguimiento-titulo .texto {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 1rem;
+        }
+
+        .panel-seguimiento-badges {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .panel-badge-critico {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .panel-badge-alto {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .panel-badge-medio {
+            background: #fff9e6;
+            color: #856404;
+        }
+
+        .panel-badge-total {
+            background: var(--tajy-red);
+            color: white;
+        }
+
+        .btn-colapsar {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: var(--text-muted);
+            transition: transform 0.3s;
+            padding: 5px;
+        }
+
+        .panel-seguimiento.colapsado .btn-colapsar {
+            transform: rotate(-90deg);
+        }
+
+        .panel-seguimiento-contenido {
+            max-height: 400px;
+            overflow-y: auto;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+
+        .panel-seguimiento.colapsado .panel-seguimiento-contenido {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+
+        .panel-seguimiento-lista {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+
+        .panel-seguimiento-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+
+        .panel-seguimiento-item:last-child {
+            border-bottom: none;
+        }
+
+        .panel-seguimiento-item:hover {
+            background: #f8f9fa;
+        }
+
+        .panel-seguimiento-item.urgencia-critico {
+            border-left: 4px solid #dc3545;
+            background: #fff8f8;
+        }
+
+        .panel-seguimiento-item.urgencia-alto {
+            border-left: 4px solid #fd7e14;
+            background: #fffaf5;
+        }
+
+        .panel-seguimiento-item.urgencia-medio {
+            border-left: 4px solid #ffc107;
+            background: #fffef8;
+        }
+
+        .panel-item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .panel-item-icono {
+            font-size: 1.1em;
+            flex-shrink: 0;
+        }
+
+        .panel-item-detalles {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .panel-item-numero {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.95em;
+        }
+
+        .panel-item-asegurado {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .panel-item-dias {
+            font-size: 0.8em;
+            color: #666;
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 10px;
+            white-space: nowrap;
+        }
+
+        .panel-item-acciones {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn-panel-accion {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-panel-whatsapp {
+            background: #25d366;
+            color: white;
+        }
+
+        .btn-panel-whatsapp:hover {
+            background: #1da851;
+            transform: scale(1.05);
+        }
+
+        .btn-panel-contactado {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-panel-contactado:hover {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-panel-contactado.marcado {
+            background: #28a745;
+            color: white;
+        }
+
+        .panel-seguimiento-vacio {
+            padding: 30px 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .panel-seguimiento-vacio .icono {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        .panel-seguimiento-vacio .texto {
+            font-size: 0.95em;
+        }
+
+        /* Animación pulse para críticos */
+        @keyframes pulse-critico {
+            0%, 100% {
+                box-shadow: 0 4px 20px rgba(220, 53, 69, 0.15);
+            }
+            50% {
+                box-shadow: 0 4px 25px rgba(220, 53, 69, 0.3);
+            }
+        }
+
+        .panel-seguimiento.tiene-criticos {
+            animation: pulse-critico 2s ease-in-out infinite;
+        }
+
+        /* Mejora indicadores visuales en tabla */
+        .fila-urgencia-critico {
+            border-left: 4px solid #dc3545 !important;
+            background-color: #fff5f5 !important;
+        }
+
+        .fila-urgencia-alto {
+            border-left: 4px solid #fd7e14 !important;
+            background-color: #fffaf5 !important;
+        }
+
+        .fila-urgencia-medio {
+            border-left: 4px solid #ffc107 !important;
+            background-color: #fffef8 !important;
+        }
+
+        /* Responsive panel */
+        @media (max-width: 600px) {
+            .panel-seguimiento-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .panel-item-acciones {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .panel-seguimiento-badges {
+                flex-wrap: wrap;
+            }
+        }
     </style>
 </head>
 
@@ -1217,6 +1519,36 @@
             <div class="stat-card">
                 <div class="stat-value" id="enTaller">0</div>
                 <div class="stat-label">Liquidado</div>
+            </div>
+        </div>
+
+        <!-- Panel de Seguimiento Inteligente -->
+        <div id="panelSeguimiento" class="panel-seguimiento" style="display: none;">
+            <div class="panel-seguimiento-header" onclick="togglePanelSeguimiento()">
+                <div class="panel-seguimiento-titulo">
+                    <span class="icono">📋</span>
+                    <span class="texto">Seguimientos Pendientes</span>
+                </div>
+                <div class="panel-seguimiento-badges">
+                    <span id="badgeCriticos" class="panel-badge panel-badge-critico" style="display: none;">
+                        🔴 <span id="contadorCriticos">0</span> críticos
+                    </span>
+                    <span id="badgeAltos" class="panel-badge panel-badge-alto" style="display: none;">
+                        🟠 <span id="contadorAltos">0</span> altos
+                    </span>
+                    <span id="badgeMedios" class="panel-badge panel-badge-medio" style="display: none;">
+                        🟡 <span id="contadorMedios">0</span> medios
+                    </span>
+                    <span id="badgeTotal" class="panel-badge panel-badge-total">
+                        <span id="contadorTotal">0</span>
+                    </span>
+                    <button class="btn-colapsar" aria-label="Colapsar panel">▼</button>
+                </div>
+            </div>
+            <div class="panel-seguimiento-contenido">
+                <ul id="listaSeguimiento" class="panel-seguimiento-lista">
+                    <!-- Items dinámicos -->
+                </ul>
             </div>
         </div>
 
