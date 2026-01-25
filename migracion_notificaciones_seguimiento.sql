@@ -131,33 +131,38 @@ BEGIN
             v_nivel := 'atencion';
         END IF;
 
-        -- Intentar insertar o actualizar notificación
-        INSERT INTO notificaciones_seguimiento (
-            siniestro_id,
-            user_id,
-            nivel_urgencia,
-            leida,
-            created_at
-        ) VALUES (
-            v_siniestro.id,
-            p_user_id,
-            v_nivel,
-            FALSE,
-            NOW()
-        )
-        ON CONFLICT (siniestro_id, user_id, nivel_urgencia)
-        DO UPDATE SET
-            nivel_urgencia = EXCLUDED.nivel_urgencia,
-            updated_at = NOW()
-        WHERE notificaciones_seguimiento.nivel_urgencia != EXCLUDED.nivel_urgencia;
+        -- Verificar si ya existe la notificación
+        IF EXISTS (
+            SELECT 1 FROM notificaciones_seguimiento
+            WHERE siniestro_id = v_siniestro.id
+            AND user_id = p_user_id
+            AND nivel_urgencia = v_nivel
+        ) THEN
+            -- Ya existe, actualizar si es necesario
+            UPDATE notificaciones_seguimiento
+            SET updated_at = NOW()
+            WHERE siniestro_id = v_siniestro.id
+            AND user_id = p_user_id
+            AND nivel_urgencia = v_nivel;
 
-        -- Contar si fue creada o actualizada
-        IF FOUND THEN
-            IF TG_OP = 'INSERT' THEN
-                v_creadas := v_creadas + 1;
-            ELSE
-                v_actualizadas := v_actualizadas + 1;
-            END IF;
+            v_actualizadas := v_actualizadas + 1;
+        ELSE
+            -- No existe, crear nueva
+            INSERT INTO notificaciones_seguimiento (
+                siniestro_id,
+                user_id,
+                nivel_urgencia,
+                leida,
+                created_at
+            ) VALUES (
+                v_siniestro.id,
+                p_user_id,
+                v_nivel,
+                FALSE,
+                NOW()
+            );
+
+            v_creadas := v_creadas + 1;
         END IF;
     END LOOP;
 
