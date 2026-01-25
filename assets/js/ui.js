@@ -588,7 +588,6 @@ export function llenarFormularioEdicion(siniestro) {
     const checkSiniestroTotal = document.getElementById('editSiniestroTotal');
     if (checkSiniestroTotal) checkSiniestroTotal.checked = siniestro.monto === 'Sí';
 
-    document.getElementById('editTaller').value = siniestro.taller || '';
     document.getElementById('editObservaciones').value = siniestro.observaciones || '';
 }
 
@@ -612,7 +611,7 @@ export function leerFormularioEdicion() {
         sexo: sexo,
         estado: document.getElementById('editEstado').value,
         monto: siniestroTotal,
-        taller: document.getElementById('editTaller').value || '',
+        taller: '', // Campo removido del formulario
         observaciones: document.getElementById('editObservaciones').value || ''
     };
 }
