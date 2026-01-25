@@ -17,6 +17,7 @@ import {
     obtenerSaludoFormal,
     calcularDiasTranscurridos,
     requiereSeguimiento,
+    formatearFecha,
     DIAS_ALERTA_SEGUIMIENTO,
     LIMITE_POR_PAGINA
 } from './utils.js';
@@ -505,11 +506,14 @@ export async function crearSiniestro(datos) {
     }
 
     try {
-        // Obtener fecha local de Paraguay (GMT-4)
+        // Obtener fecha actual en zona horaria de Paraguay (America/Asuncion)
         const ahora = new Date();
-        const offsetParaguay = -4 * 60; // Paraguay está en GMT-4
-        const fechaParaguay = new Date(ahora.getTime() + (ahora.getTimezoneOffset() + offsetParaguay) * 60000);
-        const fechaActual = fechaParaguay.toISOString().split('T')[0];
+        const fechaActual = ahora.toLocaleDateString('en-CA', {
+            timeZone: 'America/Asuncion',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }); // Formato: YYYY-MM-DD
 
         const nuevoSiniestro = {
             numero: datos.numero,
@@ -760,7 +764,7 @@ export function generarHtmlReporte(reporteSiniestros, fechaDesde, fechaHasta) {
         <body>
             <h2>📊 Reporte de Siniestros - Aseguradora Tajy</h2>
             <div class="info">
-                <p><strong>Período:</strong> ${new Date(fechaDesde).toLocaleDateString('es-PY')} - ${new Date(fechaHasta).toLocaleDateString('es-PY')}</p>
+                <p><strong>Período:</strong> ${formatearFecha(fechaDesde)} - ${formatearFecha(fechaHasta)}</p>
                 <p><strong>Total de registros:</strong> ${reporteSiniestros.length}</p>
                 <p><strong>Generado:</strong> ${new Date().toLocaleString('es-PY')}</p>
             </div>
@@ -785,7 +789,7 @@ export function generarHtmlReporte(reporteSiniestros, fechaDesde, fechaHasta) {
                 <td>${s.numero}</td>
                 <td>${s.asegurado}</td>
                 <td>${s.telefono}</td>
-                <td>${new Date(s.fecha).toLocaleDateString('es-PY')}</td>
+                <td>${formatearFecha(s.fecha)}</td>
                 <td>${s.tipo}</td>
                 <td>${obtenerTextoEstado(s.estado)}</td>
                 <td>${s.monto}</td>
@@ -827,7 +831,7 @@ export function generarCsvReporte(reporteSiniestros) {
     csv += 'Nº Siniestro,Asegurado,Teléfono,Fecha,Tipo,Estado,Monto,Observaciones\n';
 
     reporteSiniestros.forEach(s => {
-        csv += `"${s.numero}","${s.asegurado}","${s.telefono}","${new Date(s.fecha).toLocaleDateString('es-PY')}","${s.tipo}","${obtenerTextoEstado(s.estado)}","${s.monto}","${s.observaciones || ''}"\n`;
+        csv += `"${s.numero}","${s.asegurado}","${s.telefono}","${formatearFecha(s.fecha)}","${s.tipo}","${obtenerTextoEstado(s.estado)}","${s.monto}","${s.observaciones || ''}"\n`;
     });
 
     return csv;

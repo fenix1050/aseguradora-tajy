@@ -1252,7 +1252,7 @@
         }
 
         #formNuevoSiniestro .btn-guardar-siniestro {
-            background-color: #8b1538;
+            background-color: var(--tajy-red);
             color: white;
             border: none;
             border-radius: 8px;
@@ -1268,13 +1268,119 @@
         }
 
         #formNuevoSiniestro .btn-guardar-siniestro:hover {
-            background-color: #6d1029;
+            background-color: var(--tajy-red-dark);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(139, 21, 56, 0.3);
+            box-shadow: 0 4px 12px rgba(196, 22, 28, 0.3);
         }
 
         #formNuevoSiniestro .btn-guardar-siniestro:active {
             transform: translateY(0);
+        }
+
+        /* ========================================= */
+        /* MENSAJES AUTOMÁTICOS - ESTILO            */
+        /* ========================================= */
+
+        #mensajes .form-group label {
+            color: #1e3a5f;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+        }
+
+        #mensajes input:not([type="checkbox"]):not([type="radio"]),
+        #mensajes select {
+            background-color: #f5f7fa;
+            border: 1px solid #e8ebef;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 0.95em;
+            color: #333;
+            transition: all 0.2s ease;
+        }
+
+        #mensajes input:not([type="checkbox"]):not([type="radio"])::placeholder,
+        #mensajes select::placeholder {
+            color: #9ca3af;
+        }
+
+        #mensajes input:not([type="checkbox"]):not([type="radio"]):focus,
+        #mensajes select:focus {
+            outline: none;
+            border-color: #0056b3;
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+        }
+
+        /* Título de sección */
+        #mensajes h3 {
+            color: #1e3a5f !important;
+            font-weight: 600;
+        }
+
+        /* ========================================= */
+        /* REPORTES - ESTILO                        */
+        /* ========================================= */
+
+        #reportes .form-group label {
+            color: #1e3a5f;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+        }
+
+        #reportes input:not([type="checkbox"]):not([type="radio"]),
+        #reportes select {
+            background-color: #f5f7fa;
+            border: 1px solid #e8ebef;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 0.95em;
+            color: #333;
+            transition: all 0.2s ease;
+        }
+
+        #reportes input:not([type="checkbox"]):not([type="radio"]):focus,
+        #reportes select:focus {
+            outline: none;
+            border-color: #0056b3;
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+        }
+
+        /* ========================================= */
+        /* ADMINISTRACIÓN - ESTILO                  */
+        /* ========================================= */
+
+        #admin .form-group label {
+            color: #1e3a5f;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+        }
+
+        #admin input:not([type="checkbox"]):not([type="radio"]),
+        #admin select {
+            background-color: #f5f7fa;
+            border: 1px solid #e8ebef;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 0.95em;
+            color: #333;
+            transition: all 0.2s ease;
+        }
+
+        #admin input:not([type="checkbox"]):not([type="radio"]):focus,
+        #admin select:focus {
+            outline: none;
+            border-color: #0056b3;
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+        }
+
+        #admin h3 {
+            color: #1e3a5f !important;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -1449,9 +1555,8 @@
                 <h2 class="card-title">Plantillas de Mensajes WhatsApp</h2>
 
                 <div style="margin-bottom: 30px;">
-                    <h3 style="color: var(--primary); margin-bottom: 15px;">Seleccionar Plantilla:</h3>
-                    <select id="tipoMensaje" onchange="actualizarPlantilla()"
-                        style="width: 100%; padding: 10px; border: 2px solid #dee2e6; border-radius: 8px;">
+                    <h3 style="margin-bottom: 15px;">Seleccionar Plantilla:</h3>
+                    <select id="tipoMensaje" onchange="actualizarPlantilla()" style="width: 100%;">
                         <option value="aprobado">✅ Siniestro Aprobado - Pasar por Taller</option>
                         <option value="consulta">📋 Solicitud de Documentos</option>
                         <option value="seguimiento">🔍 Seguimiento de Caso</option>

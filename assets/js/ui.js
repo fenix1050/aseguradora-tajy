@@ -2,7 +2,7 @@
 // UI.JS - DOM, Tabs, Modales, Alertas, Tablas
 // ============================================
 
-import { resaltarCoincidencia, obtenerTextoEstado } from './utils.js';
+import { resaltarCoincidencia, obtenerTextoEstado, formatearFecha } from './utils.js';
 
 // ============================================
 // ESTADO DE UI
@@ -528,7 +528,7 @@ export function actualizarTabla(siniestros, callbacks) {
             <td><strong>${s.numero}</strong>${iconosAlerta}</td>
             <td>${s.asegurado}</td>
             <td>${s.telefono}</td>
-            <td>${new Date(s.fecha).toLocaleDateString('es-PY')}</td>
+            <td>${formatearFecha(s.fecha)}</td>
             <td><span class="badge ${estadoBadge}">${obtenerTextoEstado(s.estado)}</span></td>
             <td><strong>${esSiniestroTotal ? 'SINIESTRO TOTAL' : 'Normal'}</strong></td>
             <td>

@@ -4,6 +4,7 @@
 
 import { getUsuarioActual } from '../auth.js';
 import { mostrarAlerta, mostrarCargando } from '../ui.js';
+import { formatearFecha } from '../utils.js';
 import {
     cargarUsuarios as cargarUsuariosService,
     crearUsuario as crearUsuarioService,
@@ -61,7 +62,7 @@ export function actualizarTablaUsuarios(usuarios) {
             <td><strong>${usuario.nombre_completo}</strong></td>
             <td>${usuario.email}</td>
             <td>${rolBadge}</td>
-            <td>${new Date(usuario.created_at).toLocaleDateString('es-PY')}</td>
+            <td>${formatearFecha(usuario.created_at)}</td>
             <td>
                 <div class="action-buttons">
                     <button class="btn btn-info btn-small btn-cambiar-rol" data-id="${usuario.id}" data-rol="${usuario.rol}" title="Cambiar rol">🔄</button>

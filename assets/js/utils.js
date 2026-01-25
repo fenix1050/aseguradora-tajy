@@ -393,3 +393,22 @@ export function obtenerSaludoFormal(nombre, sexo) {
 
     return `Estimado/a ${primerNombre}`;
 }
+
+/**
+ * Formatea una fecha string (YYYY-MM-DD o timestamp) evitando problemas de zona horaria
+ * @param {string} fechaString - Fecha en formato YYYY-MM-DD o YYYY-MM-DDTHH:MM:SS
+ * @returns {string} Fecha formateada en formato DD/MM/YYYY
+ */
+export function formatearFecha(fechaString) {
+    if (!fechaString) return '';
+
+    // Si es un timestamp, extraer solo la parte de la fecha
+    const soloFecha = fechaString.split('T')[0];
+
+    // Separar la fecha en partes para evitar conversión de zona horaria
+    const partes = soloFecha.split('-');
+    if (partes.length !== 3) return fechaString;
+
+    const [anio, mes, dia] = partes;
+    return `${dia.padStart(2, '0')}/${mes.padStart(2, '0')}/${anio}`;
+}
