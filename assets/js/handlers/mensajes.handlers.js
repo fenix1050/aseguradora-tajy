@@ -11,12 +11,16 @@ import {
     cambiarTabDirecto
 } from '../ui.js';
 import {
+    getSiniestroByIdWithFallback
+} from '../siniestros/siniestros-crud.js';
+import {
     getSiniestroByAsegurado,
-    getSiniestroById,
-    getSiniestroByIdWithFallback,
+    getSiniestroById
+} from '../siniestros/siniestros-search.js';
+import {
     generarMensaje,
     generarUrlWhatsApp
-} from '../siniestros.js';
+} from '../siniestros/siniestros-reports.js';
 
 export function handleEnviarMensaje(id) {
     // Usar IIFE async para mantener handler sincrónico hacia UI

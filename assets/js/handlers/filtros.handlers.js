@@ -17,7 +17,7 @@ import {
     getPaginaActual,
     buscarAseguradosFuzzy,
     buscarSiniestrosPorNumero
-} from '../siniestros.js';
+} from '../siniestros/siniestros-search.js';
 import { handleCargarSiniestros, handleEditarSiniestro, handleEliminarSiniestro } from './siniestros.handlers.js';
 import { handleEnviarMensaje } from './mensajes.handlers.js';
 

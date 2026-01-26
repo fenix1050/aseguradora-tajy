@@ -8,7 +8,7 @@ import {
     generarHtmlReporte,
     generarCsvReporte,
     generarNombreArchivoReporte
-} from '../siniestros.js';
+} from '../siniestros/siniestros-reports.js';
 
 export function handleGenerarReporte() {
     const fechas = leerFechasReporte();

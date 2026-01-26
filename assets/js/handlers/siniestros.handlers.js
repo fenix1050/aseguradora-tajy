@@ -24,14 +24,16 @@ import {
     marcarCampoError
 } from '../ui.js';
 import {
-    cargarSiniestros,
     crearSiniestro,
     actualizarSiniestro,
     eliminarSiniestro as eliminarSiniestroService,
-    getSiniestroById,
     getSiniestroByIdWithFallback,
     prewarmCacheIds
-} from '../siniestros.js';
+} from '../siniestros/siniestros-crud.js';
+import {
+    cargarSiniestros,
+    getSiniestroById
+} from '../siniestros/siniestros-search.js';
 import { handleEnviarMensaje } from './mensajes.handlers.js';
 
 export async function handleCargarSiniestros(pagina = 0, aplicarFiltros = false) {
