@@ -26,6 +26,9 @@
     <!-- Cargar Supabase Client Library desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- Chart.js para gráficos del dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -1921,6 +1924,341 @@
         .notificaciones-overlay.visible {
             display: block;
         }
+
+        /* ============================================
+           DASHBOARD STYLES
+           ============================================ */
+
+        .dashboard-metricas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metrica-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid;
+        }
+
+        .metrica-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .metrica-pendiente {
+            border-left-color: #ffc107;
+        }
+
+        .metrica-proceso {
+            border-left-color: #2196f3;
+        }
+
+        .metrica-aprobado {
+            border-left-color: #4caf50;
+        }
+
+        .metrica-taller {
+            border-left-color: #00bcd4;
+        }
+
+        .metrica-rechazado {
+            border-left-color: #f44336;
+        }
+
+        .metrica-total {
+            border-left-color: #9c27b0;
+        }
+
+        .metrica-icono {
+            font-size: 36px;
+            line-height: 1;
+        }
+
+        .metrica-contenido {
+            flex: 1;
+        }
+
+        .metrica-valor {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .metrica-label {
+            font-size: 13px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dashboard-graficos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .grafico-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .grafico-titulo {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0 0 15px 0;
+        }
+
+        .grafico-wrapper {
+            height: 300px;
+            position: relative;
+        }
+
+        .seccion-titulo {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0 0 15px 0;
+        }
+
+        .dashboard-tiempos {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .tiempos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .tiempo-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .tiempo-valor {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .tiempo-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .tiempo-count {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .dashboard-talleres {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .taller-item {
+            margin-bottom: 15px;
+        }
+
+        .taller-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .taller-rank {
+            background: #2196f3;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .taller-nombre {
+            flex: 1;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .taller-cantidad {
+            background: #e3f2fd;
+            color: #2196f3;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .taller-barra {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .taller-progreso {
+            background: linear-gradient(90deg, #2196f3, #00bcd4);
+            height: 100%;
+            transition: width 0.6s ease;
+        }
+
+        .dashboard-alertas {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .alertas-header {
+            background: #fff3e0;
+            color: #e65100;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-left: 4px solid #ff9800;
+        }
+
+        .alerta-seccion {
+            margin-bottom: 20px;
+        }
+
+        .alerta-titulo {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+        }
+
+        .alerta-lista {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .alerta-item {
+            background: #f5f5f5;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid #ff9800;
+        }
+
+        .alerta-dias {
+            background: #ff9800;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .alerta-item-mas {
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 8px 15px;
+        }
+
+        .alerta-vacia {
+            text-align: center;
+            padding: 40px 20px;
+            color: #95a5a6;
+        }
+
+        .texto-vacio {
+            text-align: center;
+            padding: 40px 20px;
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        /* Indicador de conexión en tiempo real */
+        .realtime-status {
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .realtime-connected {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .realtime-disconnected {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        /* Badge de notificaciones en tiempo real */
+        #badgeNotificacionesRealtime {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #f44336;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-metricas {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-graficos {
+                grid-template-columns: 1fr;
+            }
+
+            .tiempos-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
@@ -1944,6 +2282,7 @@
                 <button class="btn-notificaciones" id="btnNotificaciones" title="Notificaciones de seguimiento">
                     🔔
                     <span class="badge-contador" id="badgeContadorNotif">0</span>
+                    <span id="badgeNotificacionesRealtime" class="badge-contador">0</span>
                 </button>
                 <button class="logout-btn" onclick="cerrarSesion()" title="Cerrar sesión">🚪 Salir</button>
             </div>
@@ -1971,6 +2310,7 @@
         <div class="tabs">
             <button class="tab-button active" data-tab="lista" onclick="cambiarTabDirecto('lista')">📋 Lista de
                 Siniestros</button>
+            <button class="tab-button" data-tab="dashboard" onclick="cambiarTabDirecto('dashboard')">📊 Dashboard</button>
             <button class="tab-button" data-tab="nuevo" onclick="cambiarTabDirecto('nuevo')">➕ Nuevo Siniestro</button>
             <button class="tab-button" data-tab="mensajes" onclick="cambiarTabDirecto('mensajes')">💬 Mensajes
                 Automáticos</button>
@@ -2034,6 +2374,112 @@
                             <!-- Se llenará dinámicamente -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Dashboard -->
+        <div id="dashboard" class="tab-content">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 class="card-title">📊 Dashboard - Métricas y KPIs</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div id="indicadorRealtimeConexion" class="realtime-status"></div>
+                        <button class="btn btn-primary" onclick="refrescarDashboard()">
+                            🔄 Actualizar
+                        </button>
+                    </div>
+                </div>
+
+                <div id="dashboardContent">
+                    <!-- Métricas por Estado -->
+                    <div class="dashboard-metricas">
+                        <div class="metrica-card metrica-pendiente">
+                            <div class="metrica-icono">⏳</div>
+                            <div class="metrica-contenido">
+                                <div class="metrica-valor" id="metricaPendientes">0</div>
+                                <div class="metrica-label">Pendientes</div>
+                            </div>
+                        </div>
+
+                        <div class="metrica-card metrica-proceso">
+                            <div class="metrica-icono">🔄</div>
+                            <div class="metrica-contenido">
+                                <div class="metrica-valor" id="metricaProceso">0</div>
+                                <div class="metrica-label">En Proceso</div>
+                            </div>
+                        </div>
+
+                        <div class="metrica-card metrica-aprobado">
+                            <div class="metrica-icono">✅</div>
+                            <div class="metrica-contenido">
+                                <div class="metrica-valor" id="metricaAprobados">0</div>
+                                <div class="metrica-label">Aprobados</div>
+                            </div>
+                        </div>
+
+                        <div class="metrica-card metrica-taller">
+                            <div class="metrica-icono">🔧</div>
+                            <div class="metrica-contenido">
+                                <div class="metrica-valor" id="metricaTaller">0</div>
+                                <div class="metrica-label">En Taller</div>
+                            </div>
+                        </div>
+
+                        <div class="metrica-card metrica-rechazado">
+                            <div class="metrica-icono">❌</div>
+                            <div class="metrica-contenido">
+                                <div class="metrica-valor" id="metricaRechazados">0</div>
+                                <div class="metrica-label">Rechazados</div>
+                            </div>
+                        </div>
+
+                        <div class="metrica-card metrica-total">
+                            <div class="metrica-icono">📁</div>
+                            <div class="metrica-contenido">
+                                <div class="metrica-valor" id="metricaTotal">0</div>
+                                <div class="metrica-label">Total</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gráficos y Tendencias -->
+                    <div class="dashboard-graficos">
+                        <div class="grafico-container">
+                            <h3 class="grafico-titulo">Distribución por Estado</h3>
+                            <div class="grafico-wrapper">
+                                <canvas id="graficoEstados"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="grafico-container">
+                            <h3 class="grafico-titulo">Tendencia Últimos 6 Meses</h3>
+                            <div class="grafico-wrapper">
+                                <canvas id="graficoTendencia"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tiempos Promedio -->
+                    <div class="dashboard-tiempos">
+                        <h3 class="seccion-titulo">⏱️ Tiempo Promedio de Resolución</h3>
+                        <div class="tiempos-grid">
+                            <div id="tiempoAprobado"></div>
+                            <div id="tiempoRechazado"></div>
+                        </div>
+                    </div>
+
+                    <!-- Top Talleres -->
+                    <div class="dashboard-talleres">
+                        <h3 class="seccion-titulo">🏆 Top 5 Talleres Más Asignados</h3>
+                        <div id="topTalleres"></div>
+                    </div>
+
+                    <!-- Alertas Activas -->
+                    <div class="dashboard-alertas">
+                        <h3 class="seccion-titulo">⚠️ Alertas Activas</h3>
+                        <div id="alertasActivas"></div>
+                    </div>
                 </div>
             </div>
         </div>

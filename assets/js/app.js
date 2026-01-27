@@ -71,6 +71,19 @@ import {
     handleSincronizarNotificaciones
 } from './handlers/notificaciones.handlers.js';
 
+// Handlers de dashboard
+import {
+    handleCargarDashboard,
+    handleRefrescarDashboard
+} from './handlers/dashboard.handlers.js';
+
+// Sistema de notificaciones en tiempo real
+import {
+    inicializarRealtimeNotifications,
+    habilitarAutoReloadTabla,
+    resetearContadorNotificaciones
+} from './realtime.js';
+
 // ============================================
 // INICIALIZACIÓN
 // ============================================
@@ -90,6 +103,11 @@ async function inicializarApp() {
         button.addEventListener('click', function () {
             const tabId = this.getAttribute('data-tab');
             cambiarTabDirecto(tabId);
+
+            // Si se cambia al tab de dashboard, cargar datos
+            if (tabId === 'dashboard') {
+                handleCargarDashboard();
+            }
         });
     });
 
@@ -143,6 +161,12 @@ async function inicializarApp() {
     // Sincronizar y cargar notificaciones iniciales
     await handleSincronizarNotificaciones();
     await handleCargarNotificaciones();
+
+    // Inicializar notificaciones en tiempo real
+    await inicializarRealtimeNotifications();
+
+    // Habilitar auto-reload de tabla cuando hay cambios en tiempo real
+    habilitarAutoReloadTabla(handleCargarSiniestros);
 
     console.log('✅ Aplicación lista');
 }
@@ -227,6 +251,13 @@ window.togglePanelNotificaciones = togglePanelNotificaciones;
 window.handleEditarSiniestro = handleEditarSiniestro;
 window.handleEnviarMensaje = handleEnviarMensaje;
 window.mostrarOpcionesSnooze = mostrarOpcionesSnooze;
+
+// Dashboard
+window.cargarDashboard = handleCargarDashboard;
+window.refrescarDashboard = handleRefrescarDashboard;
+
+// Realtime
+window.resetearContadorNotificaciones = resetearContadorNotificaciones;
 
 // ============================================
 // INICIO
