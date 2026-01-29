@@ -88,8 +88,8 @@ export const handleBusquedaInteligente = debounce(async function(input) {
 
 /**
  * FASE 5.2.2: Búsqueda por número de siniestro con feedback visual
- * Filtra del array cargado en memoria (sin recarga de DB/CACHE)
- * 
+ * Busca primero en memoria (página actual), luego en toda la DB con cache
+ *
  * @param {HTMLElement} input - Input de búsqueda por número
  */
 export const handleBusquedaPorNumero = debounce(async function(input) {
@@ -108,11 +108,11 @@ export const handleBusquedaPorNumero = debounce(async function(input) {
     input.classList.remove('no-results');
 
     try {
-        // ✅ CAMBIO CLAVE: Buscar en MEMORIA (sin recarga)
-        const resultados = buscarSiniestrosPorNumero(query);
-        
+        // ✅ CAMBIO CLAVE: Buscar en MEMORIA y luego en DB completa
+        const resultados = await buscarSiniestrosPorNumero(query);
+
         input.classList.remove('searching');
-        
+
         // ✅ Renderizar directamente con la misma función que la tabla principal
         actualizarTabla(resultados, {
             onEditar: handleEditarSiniestro,

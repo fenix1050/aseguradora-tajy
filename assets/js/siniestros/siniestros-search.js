@@ -160,20 +160,76 @@ export async function buscarAseguradosFuzzy(query) {
 }
 
 /**
- * Busca siniestros por número en el array cargado en memoria
- * No accede a DB/CACHE, solo filtra el array actual
+ * Busca siniestros por número en toda la base de datos
+ * Primero busca en memoria (página actual), luego en DB con cache
  * @param {string} query - Número de siniestro a buscar
- * @returns {Array} Array de siniestros que coinciden
+ * @returns {Promise<Array>} Array de siniestros que coinciden
  */
-export function buscarSiniestrosPorNumero(query) {
+export async function buscarSiniestrosPorNumero(query) {
     if (!query || query.length < 1) {
         return [];
     }
 
     const queryLower = query.toLowerCase();
-    return siniestros.filter(s =>
+
+    // PASO 1: Buscar en memoria primero (rápido)
+    const resultadosMemoria = siniestros.filter(s =>
         s.numero && s.numero.toLowerCase().includes(queryLower)
     );
+
+    // Si encontramos en memoria, retornar inmediatamente
+    if (resultadosMemoria.length > 0) {
+        return resultadosMemoria;
+    }
+
+    // PASO 2: No encontrado en memoria, buscar en DB completa
+    const clienteSupabase = getClienteSupabase();
+    const userId = await getUserId();
+
+    if (!userId || !clienteSupabase) {
+        return [];
+    }
+
+    // CACHE HIT - Búsqueda ya calculada
+    const cacheKey = `search_numero_${normalizarQueryBusqueda(query)}_${userId}`;
+    const cached = cacheManager.get(cacheKey);
+    if (cached) {
+        console.log(`✅ Búsqueda por número "${query}" desde CACHE`);
+        return cached;
+    }
+
+    // CACHE MISS - Buscar en DB
+    try {
+        const { data, error } = await clienteSupabase
+            .from('siniestros')
+            .select('id, numero, asegurado, sexo, telefono, fecha, tipo, estado, monto, poliza, taller, observaciones, created_at')
+            .eq('user_id', userId)
+            .ilike('numero', `%${query}%`)
+            .order('created_at', { ascending: false })
+            .limit(50); // Limitar a 50 resultados
+
+        if (error) {
+            console.error('Error buscando por número en DB:', error);
+            return [];
+        }
+
+        // Precalcular campos derivados
+        const resultadosConCalculos = (data || []).map(siniestro => ({
+            ...siniestro,
+            diasTranscurridos: calcularDiasTranscurridos(siniestro.fecha),
+            requiereSeguimiento: requiereSeguimiento(siniestro)
+        }));
+
+        // CACHE SET - Guardar para próxima consulta
+        cacheManager.set(cacheKey, resultadosConCalculos);
+
+        console.log(`✅ ${resultadosConCalculos.length} siniestros encontrados en DB para número "${query}"`);
+
+        return resultadosConCalculos;
+    } catch (e) {
+        console.error('Error en búsqueda por número:', e);
+        return [];
+    }
 }
 
 /**
