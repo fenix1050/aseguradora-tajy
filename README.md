@@ -63,13 +63,17 @@ Sistema completo de gestión de siniestros con backend en Supabase (PostgreSQL) 
    ```
 
 2. **Configurar el Sistema:**
-   ```javascript
-   // Editar config.js
-   const SUPABASE_CONFIG = {
-       SUPABASE_URL: 'https://tu-proyecto.supabase.co',
-       SUPABASE_ANON_KEY: 'tu-anon-key-aqui'
-   };
+   ```bash
+   # Copiar plantilla de configuración
+   cp config.example.js config.js
+
+   # Editar config.js con tus credenciales
+   # Reemplazar:
+   #   - url: 'https://tu-proyecto.supabase.co'
+   #   - key: 'tu-anon-key-de-supabase'
    ```
+
+   **⚠️ IMPORTANTE**: `config.js` NO debe subirse a Git (ya está en `.gitignore`)
 
 3. **Ejecutar:**
    ```bash
@@ -83,6 +87,20 @@ Sistema completo de gestión de siniestros con backend en Supabase (PostgreSQL) 
 
 📖 **Guía completa:** Ver [GUIA_INSTALACION.md](GUIA_INSTALACION.md)
 
+### Deployment en Producción
+
+Para deployar en **Netlify** (recomendado):
+
+```bash
+# 1. Conectar repositorio en Netlify Dashboard
+# 2. Configurar variables de entorno:
+#    - SUPABASE_URL
+#    - SUPABASE_ANON_KEY
+# 3. Deploy automático en cada push a main
+```
+
+🚀 **Guía detallada:** Ver [DEPLOYMENT.md](DEPLOYMENT.md)
+
 ---
 
 ## 📁 Estructura del Proyecto
@@ -91,10 +109,16 @@ Sistema completo de gestión de siniestros con backend en Supabase (PostgreSQL) 
 aseguradora-tajy/
 │
 ├── 📄 index.html              # Aplicación principal
-├── 📄 config.js               # Configuración de Supabase
+├── 📄 login.html              # Página de autenticación
+├── 📄 config.example.js       # Plantilla de configuración (subir a Git)
+├── 📄 config.js               # Configuración local (NO subir a Git)
+├── 📄 build-config.sh         # Script de build para Netlify
+├── 📄 netlify.toml            # Configuración de deployment
 ├── 📄 supabase_setup.sql      # Script de base de datos
 ├── 📄 consultas_utiles.sql    # Consultas SQL útiles
+├── 📄 DEPLOYMENT.md           # Guía de deployment en Netlify
 ├── 📄 GUIA_INSTALACION.md     # Guía paso a paso
+├── 📄 CLAUDE.md               # Guía para AI Assistant
 └── 📄 README.md               # Este archivo
 ```
 

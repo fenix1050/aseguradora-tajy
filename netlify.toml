@@ -6,9 +6,11 @@
   to = "/login.html"
   status = 200
 
-# Configuración de build (ajusta según tus necesidades)
+# Configuración de build
 [build]
   publish = "."
+  # Comando que genera config.js desde variables de entorno
+  command = "bash build-config.sh || echo 'Build config skipped'"
 
 # Configuración de headers de seguridad
 [[headers]]
